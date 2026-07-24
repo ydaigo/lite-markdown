@@ -1,6 +1,17 @@
 # lite-markdown
 
-Tauri v2 製の、ものすごく軽量な Markdown エディタ（Windows / macOS 対応）。
+[![release](https://github.com/ydaigo/lite-markdown/actions/workflows/release.yml/badge.svg)](https://github.com/ydaigo/lite-markdown/actions/workflows/release.yml)
+
+Tauri v2 製の、ものすごく軽量な Markdown / メモアプリ（Windows / macOS 対応）。
+
+## ダウンロード
+
+最新版は **[Releases](https://github.com/ydaigo/lite-markdown/releases/latest)** から取得できます。
+
+- **Windows**: `.msi` または `.exe`（NSIS）
+- **macOS**: `.dmg`（Intel / Apple Silicon 両対応の universal）
+
+> 署名なしのため初回起動時に警告が出ます。Windows は「詳細情報」→「実行」、macOS は右クリック →「開く」で許可してください。
 
 - **エディタ**: CodeMirror 6（Markdown 構文ハイライト）
 - **プレビュー**: `marked` + `dompurify`（1画面トグル切替）
