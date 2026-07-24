@@ -16,6 +16,8 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-clipboard-manager = "2"
 # updater 設定を generate_context! が展開する際にクレート直下で参照される。
 serde_json = "1"
 
