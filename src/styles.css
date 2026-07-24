@@ -585,3 +585,33 @@ body {
   text-align: center;
   margin-top: 40px;
 }
+
+/* ============================ エディタ内検索パネル ============================ */
+#editor .cm-panels {
+  background: var(--toolbar-bg);
+  color: var(--fg);
+  border-color: var(--border);
+}
+#editor .cm-panels.cm-panels-top {
+  border-bottom: 1px solid var(--border);
+}
+#editor .cm-textfield {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+#editor .cm-button {
+  background: var(--btn-bg);
+  background-image: none;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+#editor .cm-button:hover {
+  background: var(--btn-hover);
+}
+#editor .cm-panel.cm-search label {
+  color: var(--fg);
+  font-size: 12px;
+}

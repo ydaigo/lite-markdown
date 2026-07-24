@@ -5,6 +5,7 @@ import { newNote, flushSave, scheduleSave } from "./notes";
 import { toggleMode, toggleTheme, toggleSearch } from "./view-modes";
 import { toggleWsMenu } from "./workspace";
 import { setDocChangeHandler, setImagePasteHandler } from "./editor";
+import { openEditorSearch, editorHasFocus } from "./editor";
 import { insertPastedImage } from "./images";
 
 // ============================================================================
@@ -66,8 +67,14 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     toggleMode();
   } else if (key === "f") {
+    // エディタにフォーカスがあるときは CodeMirror の検索に委ねる。
+    if (editorHasFocus()) return;
     e.preventDefault();
     toggleSearch(true);
+  } else if (key === "h") {
+    // エディタ内 置換パネル。
+    e.preventDefault();
+    if (state.currentPath) openEditorSearch();
   }
 });
 

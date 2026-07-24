@@ -6,6 +6,7 @@ import {
   lineNumbers,
   placeholder,
 } from "@codemirror/view";
+import { search, searchKeymap, openSearchPanel } from "@codemirror/search";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
 import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from "@codemirror/language";
@@ -73,9 +74,10 @@ const view = new EditorView({
       history(),
       highlightActiveLine(),
       markdown(),
+      search({ top: true }),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       syntaxHighlighting(mdHighlight),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       themeCompartment.of(cmTheme()),
       EditorView.lineWrapping,
       placeholder(MSG.editorPlaceholder),
@@ -122,4 +124,13 @@ export function focusEditor(): void {
 // 現在のテーマ設定をエディタへ反映する。
 export function applyEditorTheme(): void {
   view.dispatch({ effects: themeCompartment.reconfigure(cmTheme()) });
+}
+
+// エディタがフォーカスを保持しているか（キー割り当ての振り分けに使用）。
+export const editorHasFocus = (): boolean => view.hasFocus;
+
+// 検索・置換パネルを開いてエディタにフォーカスする。
+export function openEditorSearch(): void {
+  openSearchPanel(view);
+  view.focus();
 }
