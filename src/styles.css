@@ -1,0 +1,587 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --toolbar-bg: #f4f4f5;
+  --border: #e4e4e7;
+  --btn-bg: #ffffff;
+  --btn-hover: #ececef;
+  --accent: #3b82f6;
+  --code-bg: #f3f4f6;
+  --quote-border: #d4d4d8;
+  --muted: #6b7280;
+
+  --sidebar-bg: #ececec;
+  --sidebar-border: #dcdcdc;
+  --item-hover: #e2e2e2;
+  --sel-bg: #ffe08a;         /* macOS メモ風の黄色い選択 */
+  --sel-fg: #1a1a1a;
+  --sel-sub: #7a6a2f;
+  --menu-bg: #ffffff;
+  --menu-shadow: rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="dark"] {
+  --bg: #1e1e22;
+  --fg: #e6e6e6;
+  --toolbar-bg: #26262b;
+  --border: #35353b;
+  --btn-bg: #2d2d33;
+  --btn-hover: #3a3a42;
+  --accent: #60a5fa;
+  --code-bg: #2a2a30;
+  --quote-border: #45454d;
+  --muted: #9ca3af;
+
+  --sidebar-bg: #232326;
+  --sidebar-border: #34343a;
+  --item-hover: #2e2e34;
+  --sel-bg: #4a4327;
+  --sel-fg: #f4e9c6;
+  --sel-sub: #c9b57a;
+  --menu-bg: #2b2b31;
+  --menu-shadow: rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#error-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#error-bar[hidden] {
+  display: none;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic", Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================ タイトルバー（自作） ============================ */
+#titlebar {
+  flex: 0 0 auto;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tb-left {
+  display: flex;
+  gap: 2px;
+  padding-left: 8px;
+}
+
+.tb-spacer {
+  flex: 1 1 auto;
+  align-self: stretch;
+}
+
+.tb-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  align-self: stretch;
+}
+
+.tb-btn {
+  height: 30px;
+  min-width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 9px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.tb-btn:hover {
+  background: var(--btn-hover);
+}
+
+.tb-btn:active {
+  transform: translateY(1px);
+}
+
+.tb-btn.tb-text {
+  border: 1px solid var(--border);
+}
+
+/* ウィンドウ操作（最小化 / 最大化 / 閉じる） */
+.tb-winctrls {
+  display: flex;
+  align-self: stretch;
+  margin-left: 6px;
+}
+
+.tb-win {
+  width: 46px;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.tb-win:hover {
+  background: rgba(128, 128, 128, 0.22);
+}
+
+.tb-win-close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+/* ============================ 本体（サイドバー + メイン） ============================ */
+#body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+}
+
+#app.sidebar-hidden #body {
+  grid-template-columns: 0 1fr;
+}
+
+/* ============================ サイドバー ============================ */
+#sidebar {
+  grid-column: 1; /* 常に1列目に固定 */
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+#app.sidebar-hidden #sidebar {
+  display: none;
+}
+
+/* ワークスペースヘッダ */
+#ws-header {
+  position: relative;
+  padding: 8px 10px 6px;
+  flex: 0 0 auto;
+}
+
+#ws-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  text-align: left;
+}
+
+#ws-btn:hover {
+  background: var(--item-hover);
+}
+
+#ws-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ws-btn .chev {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ワークスペース切替メニュー */
+#ws-menu {
+  position: absolute;
+  top: 44px;
+  left: 8px;
+  right: 8px;
+  z-index: 20;
+  background: var(--menu-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px var(--menu-shadow);
+  padding: 4px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.ws-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.ws-item:hover {
+  background: var(--item-hover);
+}
+
+.ws-item.active .ws-item-name::before {
+  content: "✓ ";
+  color: var(--accent);
+}
+
+.ws-item-name {
+  font-weight: 600;
+}
+
+.ws-item-path {
+  color: var(--muted);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-choose {
+  font-weight: 600;
+}
+
+.ws-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+
+/* 検索バー */
+#search-bar {
+  padding: 2px 10px 6px;
+  flex: 0 0 auto;
+}
+
+#search-bar[hidden] {
+  display: none;
+}
+
+#search-input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  outline: none;
+}
+
+#search-input:focus {
+  border-color: var(--accent);
+}
+
+/* 検索で該当なし */
+.list-empty {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 20px 8px;
+}
+
+/* 新規メモ */
+#list-toolbar {
+  padding: 2px 10px 8px;
+  flex: 0 0 auto;
+}
+
+#btn-new {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  background: var(--btn-bg);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+#btn-new:hover {
+  background: var(--btn-hover);
+}
+
+#btn-new .plus {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* メモ一覧 */
+#note-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 6px 8px;
+}
+
+.note-item {
+  position: relative;
+  padding: 8px 30px 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.note-item:hover {
+  background: var(--item-hover);
+}
+
+.note-item.selected {
+  background: var(--sel-bg);
+  color: var(--sel-fg);
+}
+
+.note-title {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-sub {
+  display: flex;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.note-item.selected .note-sub {
+  color: var(--sel-sub);
+}
+
+.note-date {
+  flex: 0 0 auto;
+}
+
+.note-snippet {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-del {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px;
+  border-radius: 6px;
+  opacity: 0;
+  line-height: 1;
+}
+
+.note-item:hover .note-del {
+  opacity: 1;
+}
+
+.note-del:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* ============================ メイン ============================ */
+#main {
+  grid-column: 2; /* 常に2列目(1fr)に固定。サイドバーを display:none にしても潰れない */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* エディタ領域 */
+#editor-area {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+#editor {
+  height: 100%;
+  overflow: auto;
+}
+
+#editor .cm-editor {
+  height: 100%;
+  font-family: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", Menlo,
+    monospace;
+  font-size: 14px;
+}
+
+#editor .cm-scroller {
+  padding: 8px 4px;
+}
+
+#editor[hidden],
+#preview[hidden],
+#empty-state[hidden] {
+  display: none;
+}
+
+#empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* プレビュー */
+#preview {
+  height: 100%;
+  overflow: auto;
+  padding: 24px 32px;
+  max-width: 860px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+#preview h1,
+#preview h2 {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3em;
+}
+
+#preview h1,
+#preview h2,
+#preview h3,
+#preview h4 {
+  line-height: 1.3;
+  margin-top: 1.4em;
+}
+
+#preview a {
+  color: var(--accent);
+}
+
+#preview code {
+  background: var(--code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+}
+
+#preview pre {
+  background: var(--code-bg);
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow: auto;
+}
+
+#preview pre code {
+  background: none;
+  padding: 0;
+}
+
+#preview blockquote {
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  color: var(--muted);
+  border-left: 3px solid var(--quote-border);
+}
+
+#preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+#preview th,
+#preview td {
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+}
+
+#preview th {
+  background: var(--toolbar-bg);
+}
+
+#preview img {
+  max-width: 100%;
+}
+
+#preview hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.6em 0;
+}
+
+#preview .preview-empty {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  margin-top: 40px;
+}

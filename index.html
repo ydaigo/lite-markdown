@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>lite-markdown</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 自作タイトルバー（ネイティブ装飾は無効。アイコン/アプリ名なし） -->
+      <header id="titlebar" data-tauri-drag-region>
+        <div class="tb-left">
+          <button id="btn-sidebar" class="tb-btn" title="サイドバー表示切替">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+              <rect x="1.5" y="2.5" width="13" height="11" rx="1.5" />
+              <line x1="6" y1="2.5" x2="6" y2="13.5" />
+            </svg>
+          </button>
+          <button id="btn-search" class="tb-btn" title="検索 (Ctrl/Cmd+F)">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+              <circle cx="7" cy="7" r="4.5" />
+              <line x1="10.6" y1="10.6" x2="14" y2="14" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="tb-spacer" data-tauri-drag-region></div>
+
+        <div class="tb-right">
+          <button id="btn-toggle" class="tb-btn tb-text" title="プレビュー切替 (Ctrl/Cmd+E)">プレビュー</button>
+          <button id="btn-theme" class="tb-btn" title="テーマ切替">🌙</button>
+          <div class="tb-winctrls">
+            <button id="win-min" class="tb-win" title="最小化" aria-label="最小化">
+              <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1">
+                <line x1="1" y1="5.5" x2="9" y2="5.5" />
+              </svg>
+            </button>
+            <button id="win-max" class="tb-win" title="最大化" aria-label="最大化">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1">
+                <rect x="1.3" y="1.3" width="7.4" height="7.4" rx="0.5" />
+              </svg>
+            </button>
+            <button id="win-close" class="tb-win tb-win-close" title="閉じる" aria-label="閉じる">
+              <svg width="10" height="10" viewBox="0 0 10 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+                <line x1="1.2" y1="1.2" x2="8.8" y2="8.8" />
+                <line x1="8.8" y1="1.2" x2="1.2" y2="8.8" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div id="body">
+        <aside id="sidebar">
+          <div id="ws-header">
+            <button id="ws-btn" title="ワークスペースを切り替え">
+              <span id="ws-name">…</span>
+              <span class="chev">▾</span>
+            </button>
+            <div id="ws-menu" hidden></div>
+          </div>
+          <div id="search-bar" hidden>
+            <input id="search-input" type="text" placeholder="メモを検索…" spellcheck="false" />
+          </div>
+          <div id="list-toolbar">
+            <button id="btn-new" title="新規メモ (Ctrl/Cmd+N)">
+              <span class="plus">＋</span> 新規メモ
+            </button>
+          </div>
+          <div id="note-list"></div>
+        </aside>
+
+        <div id="main">
+          <main id="editor-area">
+            <div id="editor"></div>
+            <article id="preview" hidden></article>
+            <div id="empty-state" hidden>メモがありません。<br />「＋ 新規メモ」で始めましょう。</div>
+          </main>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
