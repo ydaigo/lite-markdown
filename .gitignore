@@ -7,6 +7,9 @@ dist-ssr
 src-tauri/target
 src-tauri/gen/schemas
 
+# updater 署名鍵（秘密鍵は絶対にコミットしない）
+.keys
+
 # エディタ / OS
 .DS_Store
 .vscode/*

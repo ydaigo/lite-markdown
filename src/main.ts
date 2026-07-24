@@ -30,6 +30,7 @@ import {
 import { homeDir, join } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { check } from "@tauri-apps/plugin-updater";
 
 // ============================================================================
 // 型と状態
@@ -714,6 +715,23 @@ appWindow.onCloseRequested(async () => {
 });
 
 // ============================================================================
+// 自動更新（nightly）
+// ============================================================================
+// 起動後にバックグラウンドで最新版を確認し、新版があれば無音で DL + インストール。
+// macOS は次回起動で自然に適用。Windows は NSIS を静かに入れ替える。
+// 失敗しても通常のメモ利用を妨げないよう、すべて握りつぶす。
+async function checkForUpdates() {
+  try {
+    const update = await check();
+    if (update) {
+      await update.downloadAndInstall();
+    }
+  } catch {
+    /* オフライン・endpoint 到達不可などは黙って無視 */
+  }
+}
+
+// ============================================================================
 // 初期化
 // ============================================================================
 async function init() {
@@ -731,3 +749,6 @@ async function init() {
 }
 
 void init();
+
+// 起動直後は避け、UI が落ち着いてから更新確認する。
+setTimeout(() => void checkForUpdates(), 3000);

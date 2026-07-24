@@ -16,6 +16,12 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+# updater 設定を generate_context! が展開する際にクレート直下で参照される。
+serde_json = "1"
+
+# updater はデスクトップ専用。
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
 
 [profile.release]
 # バイナリを可能な限り小さく・軽量に。

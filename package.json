@@ -19,6 +19,7 @@
     "@tauri-apps/api": "^2.1.1",
     "@tauri-apps/plugin-dialog": "^2.0.1",
     "@tauri-apps/plugin-fs": "^2.0.3",
+    "@tauri-apps/plugin-updater": "^2.0.0",
     "codemirror": "^6.0.1",
     "dompurify": "^3.1.7",
     "marked": "^14.1.3"

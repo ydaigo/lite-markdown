@@ -49,14 +49,26 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Build app (installers)
-        run: npm run tauri -- build ${{ matrix.args }}
+      # updater は semver 比較で動くため、nightly でも version を単調増加させる。
+      # patch を run 番号にすることで 0.1.42 -> 0.1.43 と確実に上がる。
+      - name: Set nightly version (0.1.<run_number>)
+        shell: bash
+        run: |
+          node -e "const f='src-tauri/tauri.conf.json';const fs=require('fs');const c=JSON.parse(fs.readFileSync(f));c.version='0.1.${{ github.run_number }}';fs.writeFileSync(f, JSON.stringify(c,null,2)+'\n');console.log('version =', c.version)"
 
-      - name: Collect installers
+      - name: Build app (installers + updater artifacts)
+        run: npm run tauri -- build ${{ matrix.args }}
+        env:
+          # updater パッケージの署名鍵（GitHub Secrets に登録）。
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Collect installers & updater artifacts
         shell: bash
         run: |
           mkdir -p dist
-          find src-tauri/target -type f \( -name "*.dmg" -o -name "*.msi" -o -name "*.exe" \) \
+          find src-tauri/target -type f \
+            \( -name "*.dmg" -o -name "*.msi" -o -name "*.exe" -o -name "*.sig" -o -name "*.tar.gz" \) \
             -path "*/release/bundle/*" -exec cp {} dist/ \;
           ls -la dist
 
@@ -84,6 +96,47 @@ jobs:
           find dist -type f -exec mv {} dist/ \; 2>/dev/null || true
           find dist -maxdepth 1 -type f
 
+      # updater が参照する更新マニフェスト。各プラットフォームの .sig と
+      # アセットの DL URL から組み立てる。version は build と同じ run 番号。
+      - name: Generate latest.json
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          node <<'EOF'
+          const fs = require('fs'), path = require('path');
+          const dir = 'dist';
+          const base = 'https://github.com/ydaigo/lite-markdown/releases/download/nightly/';
+          const files = fs.readdirSync(dir);
+          const sig = (f) => fs.readFileSync(path.join(dir, f), 'utf8').trim();
+          const platforms = {};
+          // Windows: NSIS setup.exe が updater ターゲット
+          const winExe = files.find((f) => /-setup\.exe$/.test(f));
+          const winSig = files.find((f) => /-setup\.exe\.sig$/.test(f));
+          if (winExe && winSig) {
+            platforms['windows-x86_64'] = { signature: sig(winSig), url: base + encodeURIComponent(winExe) };
+          }
+          // macOS: universal .app.tar.gz を両アーキで共有
+          const macTar = files.find((f) => /\.app\.tar\.gz$/.test(f));
+          const macSig = files.find((f) => /\.app\.tar\.gz\.sig$/.test(f));
+          if (macTar && macSig) {
+            const e = { signature: sig(macSig), url: base + encodeURIComponent(macTar) };
+            platforms['darwin-x86_64'] = e;
+            platforms['darwin-aarch64'] = e;
+          }
+          if (Object.keys(platforms).length === 0) {
+            console.error('更新アーティファクト(.sig)が見つかりません。署名鍵の Secrets を確認してください。');
+            process.exit(1);
+          }
+          const manifest = {
+            version: '0.1.' + process.env.RUN_NUMBER,
+            notes: 'main の最新コミットから自動ビルドされた nightly です。',
+            pub_date: new Date().toISOString(),
+            platforms,
+          };
+          fs.writeFileSync(path.join(dir, 'latest.json'), JSON.stringify(manifest, null, 2));
+          console.log(JSON.stringify(manifest, null, 2));
+          EOF
+
       - name: Publish/refresh "nightly" prerelease
         uses: softprops/action-gh-release@v2
         with:
@@ -105,3 +158,6 @@ jobs:
             dist/*.dmg
             dist/*.msi
             dist/*.exe
+            dist/*.tar.gz
+            dist/*.sig
+            dist/latest.json
