@@ -22,12 +22,14 @@ import {
   readDir,
   readTextFile,
   writeTextFile,
+  writeFile,
   mkdir,
   remove,
   stat,
 } from "@tauri-apps/plugin-fs";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 // ============================================================================
 // 型と状態
@@ -147,6 +149,25 @@ const view = new EditorView({
       EditorView.updateListener.of((u) => {
         if (u.docChanged && !loading) scheduleSave();
       }),
+      // 画像の貼り付け対応
+      EditorView.domEventHandlers({
+        paste: (event, v) => {
+          const items = event.clipboardData?.items;
+          if (!items) return false;
+          for (let i = 0; i < items.length; i++) {
+            const it = items[i];
+            if (it.kind === "file" && it.type.startsWith("image/")) {
+              const file = it.getAsFile();
+              if (file) {
+                event.preventDefault();
+                void insertPastedImage(file, v);
+                return true;
+              }
+            }
+          }
+          return false;
+        },
+      }),
     ],
   }),
   parent: editorEl,
@@ -182,7 +203,8 @@ function deriveMeta(text: string): { title: string; snippet: string } {
 // ============================================================================
 // プレビュー
 // ============================================================================
-marked.setOptions({ gfm: true, breaks: false });
+// Qiita 方式: 単一の改行も <br> として維持する。
+marked.setOptions({ gfm: true, breaks: true });
 
 function renderPreview() {
   const text = getDoc();
@@ -193,6 +215,55 @@ function renderPreview() {
   }
   const html = marked.parse(text, { async: false }) as string;
   previewEl.innerHTML = DOMPurify.sanitize(html);
+  resolveLocalImages();
+}
+
+// プレビュー内のローカル画像（image/... の相対パス）を
+// Tauri の asset URL に解決して表示できるようにする。
+function resolveLocalImages() {
+  if (!workspace) return;
+  previewEl.querySelectorAll("img").forEach((img) => {
+    const raw = img.getAttribute("src") || "";
+    if (/^(https?:|data:|blob:|asset:|tauri:)/i.test(raw)) return;
+    const abs = `${workspace}/${raw}`.replace(/\\/g, "/");
+    img.src = convertFileSrc(abs);
+  });
+}
+
+// ============================================================================
+// 画像の貼り付け（<workspace>/image/ に保存し、Markdownに挿入）
+// ============================================================================
+const IMAGE_DIR = "image";
+
+function extFromMime(type: string): string {
+  const map: Record<string, string> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/gif": "gif",
+    "image/webp": "webp",
+    "image/svg+xml": "svg",
+    "image/bmp": "bmp",
+  };
+  return map[type] || type.split("/")[1] || "png";
+}
+
+async function insertPastedImage(file: File, v: EditorView) {
+  if (!workspace) return;
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const name = `img-${Date.now()}.${extFromMime(file.type)}`;
+    const dir = await join(workspace, IMAGE_DIR);
+    try {
+      await mkdir(dir, { recursive: true });
+    } catch {
+      /* 既存なら無視 */
+    }
+    await writeFile(await join(dir, name), bytes);
+    // 相対パスで参照（ノートフォルダごと移動しても壊れない）
+    v.dispatch(v.state.replaceSelection(`![](${IMAGE_DIR}/${name})`));
+  } catch (e) {
+    showError("画像の保存に失敗しました: " + String(e));
+  }
 }
 
 function setMode(next: "edit" | "preview") {
