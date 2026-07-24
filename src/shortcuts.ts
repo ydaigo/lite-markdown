@@ -15,7 +15,7 @@ export const SHORTCUTS: Shortcut[] = [
   { keys: "Ctrl / Cmd + F", description: "メモ検索（一覧）/ エディタ内検索" },
   { keys: "Ctrl / Cmd + H", description: "エディタ内 置換" },
   { keys: "?", description: "このショートカット一覧" },
-  { keys: "Esc", description: "検索 / メニュー / ダイアログを閉じる" },
+  { keys: "Esc", description: "検索 / ダイアログを閉じる" },
 ];
 
 let overlay: HTMLDivElement | null = null;

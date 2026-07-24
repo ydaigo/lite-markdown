@@ -4,10 +4,10 @@ import { state, notify } from "./store";
 import { newNote, flushSave, scheduleSave } from "./notes";
 import { toggleMode, toggleTheme, toggleSearch } from "./view-modes";
 import { toggleWsMenu } from "./workspace";
-import { setDocChangeHandler, setImagePasteHandler } from "./editor";
-import { openEditorSearch, editorHasFocus } from "./editor";
+import { setDocChangeHandler, setImagePasteHandler, openEditorSearch, editorHasFocus } from "./editor";
 import { insertPastedImage } from "./images";
 import { toggleShortcuts, closeShortcuts, shortcutsOpen } from "./shortcuts";
+import { closeContextMenu } from "./context-menu";
 
 // ============================================================================
 // イベント配線
@@ -26,7 +26,10 @@ $<HTMLButtonElement>("btn-sidebar").addEventListener("click", () =>
   appEl.classList.toggle("sidebar-hidden"),
 );
 $<HTMLButtonElement>("btn-search").addEventListener("click", () => toggleSearch());
-$<HTMLButtonElement>("btn-help").addEventListener("click", () => toggleShortcuts());
+$<HTMLButtonElement>("btn-help").addEventListener("click", () => {
+  closeContextMenu();
+  toggleShortcuts();
+});
 btnToggle.addEventListener("click", () => toggleMode());
 btnTheme.addEventListener("click", () => toggleTheme());
 
@@ -64,6 +67,7 @@ window.addEventListener("keydown", (e) => {
   // 入力中でなければ「?」でショートカット一覧を開閉。
   if (e.key === "?" && !isTypingTarget(e.target)) {
     e.preventDefault();
+    closeContextMenu();
     toggleShortcuts();
     return;
   }

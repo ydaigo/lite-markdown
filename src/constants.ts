@@ -48,5 +48,4 @@ export const MSG = {
   copyPathFailed: "パスのコピーに失敗しました",
   revealFailed: "フォルダを開けませんでした",
   shortcutsTitle: "キーボードショートカット",
-  helpTitle: "ショートカット一覧 (?)",
 } as const;
