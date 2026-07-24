@@ -7,6 +7,7 @@ import { toggleWsMenu } from "./workspace";
 import { setDocChangeHandler, setImagePasteHandler } from "./editor";
 import { openEditorSearch, editorHasFocus } from "./editor";
 import { insertPastedImage } from "./images";
+import { toggleShortcuts, closeShortcuts, shortcutsOpen } from "./shortcuts";
 
 // ============================================================================
 // イベント配線
@@ -25,6 +26,7 @@ $<HTMLButtonElement>("btn-sidebar").addEventListener("click", () =>
   appEl.classList.toggle("sidebar-hidden"),
 );
 $<HTMLButtonElement>("btn-search").addEventListener("click", () => toggleSearch());
+$<HTMLButtonElement>("btn-help").addEventListener("click", () => toggleShortcuts());
 btnToggle.addEventListener("click", () => toggleMode());
 btnTheme.addEventListener("click", () => toggleTheme());
 
@@ -54,6 +56,17 @@ document.addEventListener("click", () => toggleWsMenu(false));
 
 // キーボードショートカット
 window.addEventListener("keydown", (e) => {
+  // ショートカット一覧モーダルが開いていれば Esc で閉じる。
+  if (e.key === "Escape" && shortcutsOpen()) {
+    closeShortcuts();
+    return;
+  }
+  // 入力中でなければ「?」でショートカット一覧を開閉。
+  if (e.key === "?" && !isTypingTarget(e.target)) {
+    e.preventDefault();
+    toggleShortcuts();
+    return;
+  }
   const mod = e.ctrlKey || e.metaKey;
   if (!mod) return;
   const key = e.key.toLowerCase();
@@ -77,6 +90,14 @@ window.addEventListener("keydown", (e) => {
     if (state.currentPath) openEditorSearch();
   }
 });
+
+// 入力欄やエディタ（contenteditable）にフォーカスがあるかを判定する。
+function isTypingTarget(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  if (!el) return false;
+  if (el.isContentEditable) return true;
+  return el.tagName === "INPUT" || el.tagName === "TEXTAREA";
+}
 
 // フォーカスが外れたら保存（安全策）
 window.addEventListener("blur", () => void flushSave());

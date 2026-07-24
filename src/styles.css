@@ -664,3 +664,67 @@ body {
 .ctx-item.danger {
   color: #dc2626;
 }
+
+/* ============================ ショートカット一覧モーダル ============================ */
+#sc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+}
+.sc-dialog {
+  width: min(420px, 90vw);
+  max-height: 80vh;
+  overflow: auto;
+  background: var(--menu-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px var(--menu-shadow);
+  padding: 16px 18px;
+}
+.sc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sc-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+.sc-close {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.sc-close:hover {
+  background: var(--item-hover);
+}
+.sc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+  font-size: 13px;
+}
+.sc-row + .sc-row {
+  border-top: 1px solid var(--border);
+}
+.sc-desc {
+  flex: 1;
+}
+.sc-keys {
+  flex: 0 0 auto;
+  font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
