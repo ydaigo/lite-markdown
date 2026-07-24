@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 
 // Tauri は開発時に固定ポートを期待するため、環境変数から調整可能にしておく。
@@ -23,5 +24,10 @@ export default defineConfig({
     target: process.env.TAURI_ENV_PLATFORM === "windows" ? "chrome105" : "safari13",
     minify: !process.env.TAURI_ENV_DEBUG ? "esbuild" : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
+  },
+  // ユニットテストは DOM/Tauri 非依存の pure 関数が中心のため node 環境で実行。
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.ts"],
   },
 });
