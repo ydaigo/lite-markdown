@@ -1,0 +1,107 @@
+name: nightly
+
+# main への push ごとに Mac / Windows をビルドし、
+# 固定タグ "nightly" の Prerelease を最新版で上書き公開します。
+# 恒久URL: https://github.com/ydaigo/lite-markdown/releases/tag/nightly
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+# 連続 push 時は古い実行をキャンセルし、最新だけを反映。
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: "--target universal-apple-darwin"
+          - platform: windows-latest
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache cargo
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build app (installers)
+        run: npm run tauri -- build ${{ matrix.args }}
+
+      - name: Collect installers
+        shell: bash
+        run: |
+          mkdir -p dist
+          find src-tauri/target -type f \( -name "*.dmg" -o -name "*.msi" -o -name "*.exe" \) \
+            -path "*/release/bundle/*" -exec cp {} dist/ \;
+          ls -la dist
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lite-markdown-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: warn
+          retention-days: 14
+
+  publish-nightly:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten & list
+        run: |
+          find dist -type f -exec mv {} dist/ \; 2>/dev/null || true
+          find dist -maxdepth 1 -type f
+
+      - name: Publish/refresh "nightly" prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          name: "Nightly (latest main)"
+          prerelease: true
+          # 同名アセットは置き換え。nightly タグは最新コミットへ移動。
+          body: |
+            **main の最新コミットから自動ビルドされた最新版**です。
+
+            - **Windows**: `.msi` または `.exe`（NSIS）
+            - **macOS**: `.dmg`（Intel / Apple Silicon 両対応 universal）
+
+            コミット: `${{ github.sha }}`
+
+            > 署名なしのため初回起動時に警告が出ます。
+            > Windows: 「詳細情報」→「実行」／ macOS: 右クリック →「開く」。
+          files: |
+            dist/*.dmg
+            dist/*.msi
+            dist/*.exe
