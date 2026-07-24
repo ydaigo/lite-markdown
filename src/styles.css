@@ -441,7 +441,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.note-del {
+.note-more {
   position: absolute;
   top: 50%;
   right: 6px;
@@ -457,11 +457,11 @@ body {
   line-height: 1;
 }
 
-.note-item:hover .note-del {
+.note-item:hover .note-more {
   opacity: 1;
 }
 
-.note-del:hover {
+.note-more:hover {
   background: rgba(0, 0, 0, 0.12);
 }
 

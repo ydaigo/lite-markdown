@@ -4,10 +4,22 @@ import { baseName } from "./utils";
 import { formatDate } from "./format";
 import { MSG } from "./constants";
 import { selectNote, deleteNote } from "./notes";
+import { openContextMenu, type MenuItem } from "./context-menu";
+import { copyPath, revealInDir } from "./note-actions";
 
 // ============================================================================
 // サイドバー描画
 // ============================================================================
+
+// メモ1件に対するコンテキストメニュー項目。
+function noteMenuItems(path: string): MenuItem[] {
+  return [
+    { label: MSG.menuCopyPath, action: () => void copyPath(path) },
+    { label: MSG.menuReveal, action: () => void revealInDir(path) },
+    { label: MSG.menuDelete, danger: true, action: () => void deleteNote(path) },
+  ];
+}
+
 export function renderList(): void {
   listEl.replaceChildren();
   const q = state.searchQuery;
@@ -43,17 +55,22 @@ export function renderList(): void {
     snip.textContent = note.snippet || MSG.noExtraText;
     sub.append(date, snip);
 
-    const del = document.createElement("button");
-    del.className = "note-del";
-    del.title = "削除";
-    del.textContent = "🗑";
-    del.addEventListener("click", (e) => {
+    const more = document.createElement("button");
+    more.className = "note-more";
+    more.title = MSG.menuMore;
+    more.textContent = "⋯";
+    more.addEventListener("click", (e) => {
       e.stopPropagation();
-      void deleteNote(note.path);
+      const r = more.getBoundingClientRect();
+      openContextMenu(noteMenuItems(note.path), r.left, r.bottom + 2);
     });
 
-    item.append(title, sub, del);
+    item.append(title, sub, more);
     item.addEventListener("click", () => void selectNote(note.path));
+    item.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      openContextMenu(noteMenuItems(note.path), e.clientX, e.clientY);
+    });
     listEl.append(item);
   }
   emptyEl.hidden = state.notes.length > 0 || state.currentPath !== null;
