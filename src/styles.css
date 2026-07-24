@@ -633,3 +633,34 @@ body {
   color: var(--fg);
   font-size: 12px;
 }
+
+/* ============================ コンテキストメニュー ============================ */
+.ctx-menu {
+  position: fixed;
+  z-index: 50;
+  min-width: 168px;
+  background: var(--menu-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px var(--menu-shadow);
+  padding: 4px;
+}
+.ctx-item {
+  width: 100%;
+  display: block;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+.ctx-item:hover {
+  background: var(--item-hover);
+}
+.ctx-item.danger {
+  color: #dc2626;
+}
