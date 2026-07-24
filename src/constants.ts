@@ -40,4 +40,13 @@ export const MSG = {
   imageSaveFailed: "画像の保存に失敗しました",
   saveFailed: "メモの保存に失敗しました",
   deleteFailed: "メモの削除に失敗しました",
+  menuMore: "操作",
+  menuCopyPath: "パスをコピー",
+  menuReveal: "ディレクトリを開く",
+  menuDelete: "削除",
+  copyPathDone: "パスをコピーしました",
+  copyPathFailed: "パスのコピーに失敗しました",
+  revealFailed: "フォルダを開けませんでした",
+  shortcutsTitle: "キーボードショートカット",
+  helpTitle: "ショートカット一覧 (?)",
 } as const;

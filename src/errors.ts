@@ -14,6 +14,23 @@ export function showError(msg: string): void {
   bar.hidden = false;
 }
 
+// 成功などの軽い一時通知（数秒で自動的に消える）。エラーバーとは別枠。
+let toastTimer: number | undefined;
+export function showToast(msg: string): void {
+  let el = document.getElementById("toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => {
+    if (el) el.hidden = true;
+  }, 1800);
+}
+
 // 未捕捉エラー/未処理 Promise 拒否を画面へ表示する。
 export function registerGlobalErrorHandlers(): void {
   window.addEventListener("error", (e) => showError(e.message));
