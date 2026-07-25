@@ -21,6 +21,10 @@ export const SAVE_DEBOUNCE_MS = 400;
 // 起動後に更新確認を行うまでの遅延(ms)。UI が落ち着いてから実行する。
 export const UPDATE_CHECK_DELAY_MS = 3000;
 
+// 初期化がここまでに終わらなくてもウィンドウを表示する時間切れ(ms)。
+// 非表示のまま残さないための保険（Rust 側にはさらに長い保険がある）。
+export const REVEAL_DEADLINE_MS = 1500;
+
 // 既定ワークスペースのフォルダ名（ホーム直下に作成）。
 export const DEFAULT_WORKSPACE_DIR = "lite-markdown-notes";
 

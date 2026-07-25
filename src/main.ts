@@ -5,7 +5,9 @@ import { initTheme } from "./view-modes";
 import { applyLanguage } from "./localize";
 import { isAutoUpdateEnabled } from "./settings";
 import { initWorkspace } from "./workspace";
-import { UPDATE_CHECK_DELAY_MS } from "./constants";
+import { revealWindow } from "./app-window";
+import { prefetchRenderer } from "./preview";
+import { UPDATE_CHECK_DELAY_MS, REVEAL_DEADLINE_MS } from "./constants";
 
 registerGlobalErrorHandlers();
 
@@ -20,7 +22,14 @@ async function init(): Promise<void> {
   await initWorkspace();
 }
 
-void init();
+// ウィンドウは中身を描き終えてから出す（起動時の白いちらつき対策）。
+// メモの読み込みが失敗・長引いても、必ず出す。
+void init().finally(() => {
+  revealWindow();
+  // 表示後の空き時間にプレビュー用のライブラリを先読みしておく。
+  setTimeout(prefetchRenderer, 0);
+});
+setTimeout(revealWindow, REVEAL_DEADLINE_MS);
 
 // 自動更新はリリースビルドのみ。ローカルでは VITE_UPDATER が無いので
 // updater のコードごとバンドルから外れる。設定でオフにしていれば確認しない。

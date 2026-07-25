@@ -4,6 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>lite-markdown</title>
+    <!-- バンドル(CSS/JS)の読み込み前に背景色を確定させ、起動時の白いちらつきを防ぐ。
+         色は styles.css の --bg と揃えること。 -->
+    <style>
+      html {
+        background: #ffffff;
+      }
+      html[data-theme="dark"] {
+        background: #1e1e22;
+      }
+      body {
+        margin: 0;
+      }
+    </style>
+    <script>
+      // 保存済みテーマを最初の描画より前に反映する。未保存なら OS の設定に従う
+      // （キーと既定値は constants.ts / store.ts と対応）。
+      (function () {
+        var t = localStorage.getItem("lm.theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
   </head>
   <body>
     <div id="app">
