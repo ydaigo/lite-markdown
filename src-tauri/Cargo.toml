@@ -15,7 +15,8 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
+# watch: フォルダの変更監視（src/sync.ts）。既定では入らないので明示的に有効化する。
+tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-opener = "2"
 tauri-plugin-clipboard-manager = "2"
 # ソース中に参照は無いが必須。generate_context! は設定の plugins セクションを

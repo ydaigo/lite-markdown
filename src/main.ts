@@ -20,8 +20,8 @@ registerGlobalErrorHandlers();
 async function init(): Promise<void> {
   initTheme();
   applyLanguage();
+  // ワークスペースの監視は setWorkspace が張るので、ここでは復帰時の確認だけ足す。
   await initWorkspace();
-  // 一覧を読み込んだ後に監視を始める（別ウィンドウ・他アプリの変更を取り込む）。
   startSync();
 }
 

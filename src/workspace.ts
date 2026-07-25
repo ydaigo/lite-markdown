@@ -4,7 +4,7 @@ import { state, notify } from "./store";
 import { wsMenuEl } from "./dom";
 import { refreshNotes, selectNote, newNote, commitCurrent } from "./notes";
 import { showEmptyState } from "./view-modes";
-import { markSynced } from "./sync";
+import { watchWorkspace } from "./sync";
 import { updateWsName } from "./sidebar";
 import { readJSON, writeJSON } from "./storage";
 import { mkdirSafe } from "./fs-utils";
@@ -54,8 +54,8 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
   } else {
     await newNote();
   }
-  // 読み込んだ直後の状態を監視の基準にする（切替直後の無駄な読み直しを省く）。
-  void markSynced();
+  // 監視先を新しいワークスペースへ張り替える（外部の変更を取り込む）。
+  void watchWorkspace();
   notify();
 }
 

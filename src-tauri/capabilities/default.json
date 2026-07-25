@@ -30,6 +30,8 @@
     "fs:allow-mkdir",
     "fs:allow-remove",
     "fs:allow-create",
+    "fs:allow-watch",
+    "fs:allow-unwatch",
     "opener:allow-reveal-item-in-dir",
     "clipboard-manager:allow-write-text"
   ]
