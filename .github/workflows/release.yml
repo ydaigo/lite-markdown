@@ -62,7 +62,7 @@ jobs:
               const next = b === 'major' ? [ma+1,0,0] : b === 'minor' ? [ma,mi+1,0] : [ma,mi,pa+1];
               console.log(next.join('.'));
             ")
-            # tauri.conf.json が正。npm ci が落ちないよう package.json と
+            # tauri.conf.json が正。表示が食い違わないよう package.json と
             # package-lock.json の version も同じ値に揃える。
             node -e "
               const fs = require('fs');
@@ -123,7 +123,7 @@ jobs:
           workspaces: "./src-tauri -> target"
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build app (installers + updater artifacts)
         run: npm run tauri -- build ${{ matrix.args }} --features updater --config src-tauri/tauri.release.conf.json

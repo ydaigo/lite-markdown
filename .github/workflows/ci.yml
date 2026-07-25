@@ -27,8 +27,11 @@ jobs:
           node-version: 20
           cache: npm
 
+      # npm ci は使わない。package-lock.json は Windows で生成されており、
+      # Linux 専用の optional 依存（@emnapi/*, vitest 配下の esbuild）を含まないため
+      # npm ci が同期エラーで落ちる。
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Typecheck
         run: npm run typecheck
