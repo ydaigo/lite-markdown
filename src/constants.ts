@@ -28,4 +28,13 @@ export const REVEAL_DEADLINE_MS = 1500;
 // 既定ワークスペースのフォルダ名（ホーム直下に作成）。
 export const DEFAULT_WORKSPACE_DIR = "lite-markdown-notes";
 
+// メモを別ウィンドウで開くときの大きさ。
+// tauri.conf.json の app.windows（メインウィンドウ）と揃えている。
+export const NOTE_WINDOW = {
+  width: 1000,
+  height: 700,
+  minWidth: 480,
+  minHeight: 360,
+} as const;
+
 // UI 文言は言語ごとに切り替わるため i18n.ts に置く（t() 経由で取得）。

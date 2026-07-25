@@ -3,6 +3,10 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 // 自作タイトルバーやウィンドウ操作で使う現在のウィンドウ参照。
 export const appWindow = getCurrentWindow();
 
+// メモを別ウィンドウで開くと、同じフロントエンドが note-* ラベルで動く。
+// 全ウィンドウで行うと困る処理（更新確認など）はこれで分ける。
+export const isMainWindow = (): boolean => appWindow.label === "main";
+
 // ============================================================================
 // 起動時の表示
 // ============================================================================

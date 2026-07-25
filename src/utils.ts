@@ -9,6 +9,17 @@ export const baseName = (p: string): string =>
     .split(/[\\/]/)
     .pop() || p;
 
+// パスから親フォルダを取り出す（区切り文字は元の表記のまま）。
+// ドライブ直下（C:\note.md）は "C:\" のように区切りを残す。
+export const dirName = (p: string): string => {
+  const s = p.replace(/[\\/]+$/, "");
+  const i = Math.max(s.lastIndexOf("/"), s.lastIndexOf("\\"));
+  if (i < 0) return s;
+  const dir = s.slice(0, i);
+  // ルート直下（/note.md, C:\note.md）は区切りまで含めて返す。
+  return dir === "" || dir.endsWith(":") ? s.slice(0, i + 1) : dir;
+};
+
 // フォルダ配下のパスを組み立てる。@tauri-apps/api の join は 1 回ごとに
 // Rust への呼び出しが発生するため、件数が増える場面ではこちらを使う。
 // 区切り文字はフォルダ側の表記に合わせる（Windows なら "\"）。

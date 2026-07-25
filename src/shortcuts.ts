@@ -12,6 +12,7 @@ export interface Shortcut {
 
 export const SHORTCUTS: readonly Shortcut[] = [
   { keys: "Ctrl / Cmd + N", descKey: "scNewNote" },
+  { keys: "Ctrl / Cmd + B", descKey: "scToggleSidebar" },
   { keys: "Ctrl / Cmd + E", descKey: "scToggleMode" },
   { keys: "Ctrl / Cmd + F", descKey: "scSearch" },
   { keys: "Ctrl / Cmd + Shift + F", descKey: "scSearchNotes" },

@@ -5,7 +5,7 @@ import { initTheme } from "./view-modes";
 import { applyLanguage } from "./localize";
 import { isAutoUpdateEnabled } from "./settings";
 import { initWorkspace } from "./workspace";
-import { revealWindow } from "./app-window";
+import { revealWindow, isMainWindow } from "./app-window";
 import { prefetchRenderer } from "./preview";
 import { UPDATE_CHECK_DELAY_MS, REVEAL_DEADLINE_MS } from "./constants";
 
@@ -33,7 +33,8 @@ setTimeout(revealWindow, REVEAL_DEADLINE_MS);
 
 // 自動更新はリリースビルドのみ。ローカルでは VITE_UPDATER が無いので
 // updater のコードごとバンドルから外れる。設定でオフにしていれば確認しない。
-if (import.meta.env.VITE_UPDATER === "1" && isAutoUpdateEnabled()) {
+// メモ用のサブウィンドウでは行わない（権限もメインウィンドウにだけ与えている）。
+if (import.meta.env.VITE_UPDATER === "1" && isAutoUpdateEnabled() && isMainWindow()) {
   // 起動直後は避け、UI が落ち着いてから更新確認する。
   setTimeout(() => {
     void import("./updater").then((m) => m.checkForUpdates());

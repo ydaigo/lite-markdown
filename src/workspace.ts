@@ -8,7 +8,7 @@ import { updateWsName } from "./sidebar";
 import { readJSON, writeJSON } from "./storage";
 import { mkdirSafe } from "./fs-utils";
 import { showErrorFor } from "./errors";
-import { baseName } from "./utils";
+import { baseName, dirName } from "./utils";
 import { LS, DEFAULT_WORKSPACE_DIR } from "./constants";
 import { t } from "./i18n";
 
@@ -22,7 +22,9 @@ function registerWorkspace(path: string): void {
   }
 }
 
-export async function setWorkspace(path: string): Promise<void> {
+// preferNote を渡すと、前回開いていたメモより優先してそれを開く
+// （別ウィンドウで特定のメモを開く場合に使う）。
+export async function setWorkspace(path: string, preferNote?: string): Promise<void> {
   await commitCurrent();
   await mkdirSafe(path);
   state.workspace = path;
@@ -43,7 +45,7 @@ export async function setWorkspace(path: string): Promise<void> {
     return;
   }
 
-  const last = readJSON<Record<string, string>>(LS.lastNote, {})[path];
+  const last = preferNote ?? readJSON<Record<string, string>>(LS.lastNote, {})[path];
   if (last && state.notes.some((n) => n.path === last)) {
     await selectNote(last);
   } else if (state.notes.length) {
@@ -57,6 +59,15 @@ export async function setWorkspace(path: string): Promise<void> {
 // 起動時の復元: 前回のワークスペース、無ければホーム直下の既定フォルダを開く。
 export async function initWorkspace(): Promise<void> {
   state.workspaces = readJSON<string[]>(LS.workspaces, []);
+
+  // 別ウィンドウで開かれた場合は URL でメモが指定される（note-actions.ts）。
+  // メモは必ずワークスペース直下にあるので、その親フォルダを開く。
+  const note = new URLSearchParams(location.search).get("note");
+  if (note) {
+    await setWorkspace(dirName(note), note);
+    return;
+  }
+
   const current = localStorage.getItem(LS.current);
   if (current) {
     await setWorkspace(current);

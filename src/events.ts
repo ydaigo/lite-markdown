@@ -1,6 +1,5 @@
 import { appWindow } from "./app-window";
 import {
-  appEl,
   btnNew,
   btnSearch,
   btnSettings,
@@ -16,7 +15,7 @@ import {
 } from "./dom";
 import { state, notify } from "./store";
 import { newNote, flushSave, scheduleSave } from "./notes";
-import { setMode, toggleMode, toggleTheme, toggleSearch } from "./view-modes";
+import { setMode, toggleMode, toggleTheme, toggleSearch, toggleSidebar } from "./view-modes";
 import { toggleWsMenu } from "./workspace";
 import {
   setDocChangeHandler,
@@ -41,7 +40,7 @@ wsBtn.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleWsMenu();
 });
-btnSidebar.addEventListener("click", () => appEl.classList.toggle("sidebar-hidden"));
+btnSidebar.addEventListener("click", () => toggleSidebar());
 btnSearch.addEventListener("click", () => toggleSearch());
 btnSettings.addEventListener("click", () => {
   closeContextMenu();
@@ -94,6 +93,9 @@ window.addEventListener("keydown", (e) => {
   if (key === "n") {
     e.preventDefault();
     void newNote();
+  } else if (key === "b") {
+    e.preventDefault();
+    toggleSidebar();
   } else if (key === "s") {
     e.preventDefault();
     void flushSave();

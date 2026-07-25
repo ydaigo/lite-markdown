@@ -5,7 +5,7 @@ import { formatDate } from "./format";
 import { t, localeOf } from "./i18n";
 import { selectNote, deleteNote } from "./notes";
 import { openContextMenu, type MenuItem } from "./context-menu";
-import { copyPath, revealInDir } from "./note-actions";
+import { copyPath, revealInDir, openInNewWindow } from "./note-actions";
 
 // ============================================================================
 // サイドバー描画
@@ -14,6 +14,7 @@ import { copyPath, revealInDir } from "./note-actions";
 // メモ1件に対するコンテキストメニュー項目。
 function noteMenuItems(path: string): MenuItem[] {
   return [
+    { label: t("menuOpenInNewWindow"), action: () => void openInNewWindow(path) },
     { label: t("menuCopyPath"), action: () => void copyPath(path) },
     { label: t("menuReveal"), action: () => void revealInDir(path) },
     { label: t("menuDelete"), danger: true, action: () => void deleteNote(path) },

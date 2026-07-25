@@ -41,15 +41,17 @@ const ja = {
   copyPathDone: "パスをコピーしました",
   copyPathFailed: "パスのコピーに失敗しました",
   revealFailed: "フォルダを開けませんでした",
+  newWindowFailed: "新しいウィンドウを開けませんでした",
 
   // メモの操作メニュー
   menuMore: "操作",
+  menuOpenInNewWindow: "新規ウィンドウで開く",
   menuCopyPath: "パスをコピー",
   menuReveal: "ディレクトリを開く",
   menuDelete: "削除",
 
   // タイトルバー / サイドバー（index.html の静的ラベル）
-  tipSidebar: "サイドバー表示切替",
+  tipSidebar: "サイドバー表示切替 (Ctrl/Cmd+B)",
   tipSearch: "メモ検索 (Ctrl/Cmd+Shift+F)",
   tipSettings: "設定",
   tipToggleMode: "プレビュー切替 (Ctrl/Cmd+E)",
@@ -73,6 +75,7 @@ const ja = {
 
   // ショートカットの説明
   scNewNote: "新規メモ",
+  scToggleSidebar: "サイドバー表示切替",
   scToggleMode: "編集 / プレビュー切替",
   scSearch: "エディタ内検索",
   scSearchNotes: "メモ検索（一覧）",
@@ -107,13 +110,15 @@ const en: Record<MsgKey, string> = {
   copyPathDone: "Path copied",
   copyPathFailed: "Failed to copy the path",
   revealFailed: "Failed to open the folder",
+  newWindowFailed: "Failed to open a new window",
 
   menuMore: "Actions",
+  menuOpenInNewWindow: "Open in new window",
   menuCopyPath: "Copy path",
   menuReveal: "Show in folder",
   menuDelete: "Delete",
 
-  tipSidebar: "Toggle sidebar",
+  tipSidebar: "Toggle sidebar (Ctrl/Cmd+B)",
   tipSearch: "Search notes (Ctrl/Cmd+Shift+F)",
   tipSettings: "Settings",
   tipToggleMode: "Toggle preview (Ctrl/Cmd+E)",
@@ -135,6 +140,7 @@ const en: Record<MsgKey, string> = {
   autoUpdateUnavailable: "Auto update is not available in this build",
 
   scNewNote: "New note",
+  scToggleSidebar: "Toggle sidebar",
   scToggleMode: "Toggle editor / preview",
   scSearch: "Search in editor",
   scSearchNotes: "Search notes (list)",
