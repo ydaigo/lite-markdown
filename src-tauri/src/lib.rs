@@ -6,8 +6,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init());
 
-    // updater はデスクトップ専用プラグイン。
-    #[cfg(desktop)]
+    // updater はデスクトップ専用プラグイン。--features updater を付けた nightly ビルドのみ有効。
+    #[cfg(all(desktop, feature = "updater"))]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
 
     builder

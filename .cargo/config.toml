@@ -1,0 +1,6 @@
+# Windows(MSVC) の既定リンカ link.exe は遅い。rustc 同梱の rust-lld を使うと
+# インクリメンタルビルドのリンクが大きく短縮される（rustc 1.97 で同梱）。
+# リポジトリ直下に置くことで、ルートから叩く cargo と tauri CLI が src-tauri を
+# cwd にして起動する cargo の両方に効く。
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"

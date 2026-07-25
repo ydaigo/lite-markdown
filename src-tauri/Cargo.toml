@@ -18,12 +18,26 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-clipboard-manager = "2"
-# updater 設定を generate_context! が展開する際にクレート直下で参照される。
+# ソース中に参照は無いが必須。generate_context! は設定の plugins セクションを
+# 展開する際にクレート直下の serde_json を参照するコードを生成する
+# （tauri.nightly.conf.json の plugins.updater を読む nightly ビルドで効く）。
 serde_json = "1"
 
-# updater はデスクトップ専用。
+# updater はデスクトップ専用。--features updater を付けた時だけコンパイルする
+# （ローカルビルドを軽くするため、既定では含めない。nightly の CI ビルドで有効化）。
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-updater = "2"
+tauri-plugin-updater = { version = "2", optional = true }
+
+[features]
+updater = ["dep:tauri-plugin-updater"]
+
+[profile.dev]
+# リンク時間と target/ の肥大を抑える。バックトレースの行番号は残す。
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+# 依存クレートはステップ実行しないので debug 情報を丸ごと落とす。
+debug = false
 
 [profile.release]
 # バイナリを可能な限り小さく・軽量に。

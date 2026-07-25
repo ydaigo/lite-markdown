@@ -57,8 +57,11 @@ jobs:
           node -e "const f='src-tauri/tauri.conf.json';const fs=require('fs');const c=JSON.parse(fs.readFileSync(f));c.version='0.1.${{ github.run_number }}';fs.writeFileSync(f, JSON.stringify(c,null,2)+'\n');console.log('version =', c.version)"
 
       - name: Build app (installers + updater artifacts)
-        run: npm run tauri -- build ${{ matrix.args }}
+        run: npm run tauri -- build ${{ matrix.args }} --features updater --config src-tauri/tauri.nightly.conf.json
         env:
+          # フロント側の更新チェックを有効化。これが無いと updater のコードは
+          # バンドルされない（開発・通常リリースでは自動更新しないため）。
+          VITE_UPDATER: "1"
           # updater パッケージの署名鍵（GitHub Secrets に登録）。
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}

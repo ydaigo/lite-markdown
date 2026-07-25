@@ -48,6 +48,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
+      # 自動更新は nightly チャネル専用。タグ付きリリースは素のインストーラを配るだけなので
+      # --features updater / tauri.nightly.conf.json / VITE_UPDATER は渡さない
+      # （.sig も latest.json も不要）。
       - name: Build & release (Tauri)
         uses: tauri-apps/tauri-action@v0
         env:

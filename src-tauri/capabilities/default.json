@@ -27,7 +27,6 @@
     "fs:allow-mkdir",
     "fs:allow-remove",
     "fs:allow-create",
-    "updater:default",
     "opener:allow-reveal-item-in-dir",
     "clipboard-manager:allow-write-text"
   ]

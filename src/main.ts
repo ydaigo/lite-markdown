@@ -6,7 +6,6 @@ import { registerGlobalErrorHandlers } from "./errors";
 import { applyTheme } from "./view-modes";
 import { setWorkspace } from "./workspace";
 import { readJSON } from "./storage";
-import { checkForUpdates } from "./updater";
 import { LS, DEFAULT_WORKSPACE_DIR, UPDATE_CHECK_DELAY_MS } from "./constants";
 
 registerGlobalErrorHandlers();
@@ -31,5 +30,11 @@ async function init(): Promise<void> {
 
 void init();
 
-// 起動直後は避け、UI が落ち着いてから更新確認する。
-setTimeout(() => void checkForUpdates(), UPDATE_CHECK_DELAY_MS);
+// 自動更新は nightly ビルドのみ。開発時は VITE_UPDATER が無いので
+// updater のコードごとバンドルから外れる。
+if (import.meta.env.VITE_UPDATER === "1") {
+  // 起動直後は避け、UI が落ち着いてから更新確認する。
+  setTimeout(() => {
+    void import("./updater").then((m) => m.checkForUpdates());
+  }, UPDATE_CHECK_DELAY_MS);
+}
