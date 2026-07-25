@@ -13,12 +13,13 @@ export async function mkdirSafe(dir: string): Promise<void> {
   }
 }
 
-// ファイルの更新時刻(epoch ms)を返す。取得できなければ 0。
-export async function statMtime(path: string): Promise<number> {
+// ファイルの更新時刻(epoch ms)を返す。ファイルが無い / 読めないときは null。
+// 「消えた」と「更新時刻を持たない(0)」を呼び出し側で区別できるようにしている。
+export async function statMtime(path: string): Promise<number | null> {
   try {
     const s = await stat(path);
     return s.mtime ? new Date(s.mtime).getTime() : 0;
   } catch {
-    return 0;
+    return null;
   }
 }

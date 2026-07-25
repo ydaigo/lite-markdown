@@ -4,18 +4,18 @@ import { t } from "./i18n";
 // メモのタイトル/抜粋の導出（純粋関数）
 // ============================================================================
 export function deriveMeta(text: string): { title: string; snippet: string } {
-  const lines = text.split(/\r?\n/);
   let title = "";
   let snippet = "";
-  for (const line of lines) {
-    const t = line
+  for (const line of text.split(/\r?\n/)) {
+    // 見出し記号とリストマーカーは飾りなので落とす。
+    const body = line
       .trim()
       .replace(/^#+\s*/, "")
       .replace(/^[-*+]\s+/, "");
-    if (!t) continue;
-    if (!title) title = t;
+    if (!body) continue;
+    if (!title) title = body;
     else {
-      snippet = t;
+      snippet = body;
       break;
     }
   }

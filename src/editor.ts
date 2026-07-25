@@ -88,6 +88,9 @@ const langExtensions = () => [
 let docChangeHandler: (() => void) | null = null;
 let imagePasteHandler: ((file: File, v: EditorView) => void) | null = null;
 
+// setDoc による差し替え中は「利用者の編集」ではないので自動保存を起こさない。
+let loading = false;
+
 export function setDocChangeHandler(fn: () => void): void {
   docChangeHandler = fn;
 }
@@ -112,7 +115,7 @@ const view = new EditorView({
       themeCompartment.of(cmTheme()),
       EditorView.lineWrapping,
       EditorView.updateListener.of((u) => {
-        if (u.docChanged && !state.loading) docChangeHandler?.();
+        if (u.docChanged && !loading) docChangeHandler?.();
       }),
       // 画像の貼り付け対応
       EditorView.domEventHandlers({
@@ -140,11 +143,11 @@ const view = new EditorView({
 
 export const getDoc = (): string => view.state.doc.toString();
 
-// プログラムから内容を差し替える（loading 中は自動保存をスキップ）。
+// プログラムから内容を差し替える（この間の変更では自動保存を走らせない）。
 export function setDoc(text: string): void {
-  state.loading = true;
+  loading = true;
   view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
-  state.loading = false;
+  loading = false;
 }
 
 export function focusEditor(): void {

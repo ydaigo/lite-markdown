@@ -1,7 +1,7 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { state, notify } from "./store";
-import { wsMenuEl } from "./dom";
+import { wsMenuEl, el } from "./dom";
 import { refreshNotes, selectNote, newNote, commitCurrent } from "./notes";
 import { showEmptyState } from "./view-modes";
 import { watchWorkspace } from "./sync";
@@ -91,27 +91,23 @@ export function toggleWsMenu(show?: boolean): void {
     wsMenuEl.hidden = true;
     return;
   }
-  wsMenuEl.replaceChildren();
-  for (const ws of state.workspaces) {
-    const b = document.createElement("button");
-    b.className = "ws-item" + (ws === state.workspace ? " active" : "");
-    b.innerHTML = `<span class="ws-item-name">${baseName(ws)}</span><span class="ws-item-path">${ws}</span>`;
+  const items: HTMLElement[] = state.workspaces.map((ws) => {
+    const b = el("button", "ws-item" + (ws === state.workspace ? " active" : ""));
+    // フォルダ名とパスはそのまま表示する（textContent なのでエスケープ不要）。
+    b.append(el("span", "ws-item-name", baseName(ws)), el("span", "ws-item-path", ws));
     b.addEventListener("click", () => {
       toggleWsMenu(false);
       if (ws !== state.workspace) void setWorkspace(ws);
     });
-    wsMenuEl.append(b);
-  }
-  const sep = document.createElement("div");
-  sep.className = "ws-sep";
-  wsMenuEl.append(sep);
-  const choose = document.createElement("button");
-  choose.className = "ws-item ws-choose";
-  choose.textContent = t("chooseFolder");
+    return b;
+  });
+
+  const choose = el("button", "ws-item ws-choose", t("chooseFolder"));
   choose.addEventListener("click", () => {
     toggleWsMenu(false);
     void chooseWorkspaceFolder();
   });
-  wsMenuEl.append(choose);
+
+  wsMenuEl.replaceChildren(...items, el("div", "ws-sep"), choose);
   wsMenuEl.hidden = false;
 }

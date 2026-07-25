@@ -2,9 +2,8 @@ import { readDir, readTextFile, writeTextFile, remove } from "@tauri-apps/plugin
 import { ask } from "@tauri-apps/plugin-dialog";
 import type { NoteMeta } from "./store";
 import { state, notify } from "./store";
-import { editorEl, emptyEl } from "./dom";
-import { getDoc, setDoc, focusEditor } from "./editor";
-import { renderPreview } from "./preview";
+import { emptyEl } from "./dom";
+import { getDoc, setDoc } from "./editor";
 import { setMode, showEmptyState, updateTitle } from "./view-modes";
 import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
@@ -34,19 +33,21 @@ function saveLastNote(path: string): void {
 // ============================================================================
 // 自動保存
 // ============================================================================
-// 保存待ちのタイマーを取り消す。「待ちが無い」ことを外から見分けられるよう
-// undefined へ戻す（外部の変更を取り込むかどうかの判断に使う → sync.ts）。
+// 保存待ちのタイマー。「待ちが無い」ことを外から見分けられるよう undefined へ戻す
+// （外部の変更を取り込むかどうかの判断に使う → sync.ts）。
+let saveTimer: number | undefined;
+
 function cancelSaveTimer(): void {
-  clearTimeout(state.saveTimer);
-  state.saveTimer = undefined;
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
 }
 
 // まだ書き出していない編集が残っているか。
-export const hasPendingSave = (): boolean => state.saveTimer !== undefined;
+export const hasPendingSave = (): boolean => saveTimer !== undefined;
 
 export function scheduleSave(): void {
   cancelSaveTimer();
-  state.saveTimer = window.setTimeout(() => void flushSave(), SAVE_DEBOUNCE_MS);
+  saveTimer = window.setTimeout(() => void flushSave(), SAVE_DEBOUNCE_MS);
 }
 
 // 現在のメモを書き込み、一覧のメタを更新して先頭へ並べ替える。
@@ -58,16 +59,18 @@ export async function flushSave(): Promise<void> {
   const ok = await withErrorNotice(t("saveFailed"), () => writeTextFile(path, text));
   if (!ok) return;
   const meta = state.notes.find((n) => n.path === path);
-  if (meta) {
-    const d = deriveMeta(text);
-    meta.title = d.title;
-    meta.snippet = d.snippet;
-    meta.mtime = Date.now();
-    meta.hay = text.toLowerCase();
-    sortByMtimeDesc(state.notes);
-    notify();
-    void updateTitle();
-  }
+  if (!meta) return;
+  const d = deriveMeta(text);
+  const titleChanged = meta.title !== d.title;
+  meta.title = d.title;
+  meta.snippet = d.snippet;
+  meta.mtime = Date.now();
+  meta.hay = text.toLowerCase();
+  sortByMtimeDesc(state.notes);
+  notify();
+  // ウィンドウ名の書き換えは Rust への呼び出しなので、変わったときだけ行う
+  // （自動保存は入力中ずっと走る）。
+  if (titleChanged) void updateTitle();
 }
 
 // 別のメモへ移る前に、現在のメモを確定（空なら破棄）する。
@@ -113,7 +116,13 @@ export async function listNoteStamps(): Promise<Map<string, number>> {
     .map((e) => joinPath(state.workspace, e.name));
   // stat は 1 件ごとに Rust を呼ぶので並行に走らせる。
   const stamps = await Promise.all(paths.map(statMtime));
-  return new Map(paths.map((p, i) => [p, stamps[i]]));
+  const map = new Map<string, number>();
+  paths.forEach((p, i) => {
+    const mtime = stamps[i];
+    // 数え上げてから stat するまでに消えたファイルは載せない。
+    if (mtime !== null) map.set(p, mtime);
+  });
+  return map;
 }
 
 // 一覧を作り直す。stamps を渡せば readDir / stat をやり直さない。
@@ -121,15 +130,31 @@ export async function listNoteStamps(): Promise<Map<string, number>> {
 export async function refreshNotes(stamps?: Map<string, number>): Promise<void> {
   const found = stamps ?? (await listNoteStamps());
   const known = new Map(state.notes.map((n) => [n.path, n]));
-  const metas = await Promise.all(
-    [...found].map(([path, mtime]) => {
-      const cached = known.get(path);
-      return cached && cached.mtime === mtime ? cached : readNoteMeta(path, mtime);
-    }),
-  );
-  const list = metas.filter((m): m is NoteMeta => m !== null);
+  // 使い回せるものはその場で確定し、読み直しが要る分だけ並行に読む。
+  const list: NoteMeta[] = [];
+  const stale: Promise<NoteMeta | null>[] = [];
+  for (const [path, mtime] of found) {
+    const cached = known.get(path);
+    if (cached && cached.mtime === mtime) list.push(cached);
+    else stale.push(readNoteMeta(path, mtime));
+  }
+  for (const meta of await Promise.all(stale)) {
+    if (meta) list.push(meta);
+  }
   sortByMtimeDesc(list);
   state.notes = list;
+}
+
+// 読み込んだ本文を画面へ出し、記録・一覧・タイトルをまとめて揃える。
+// 表示の出し分け（編集/プレビューどちらを見せるか・フォーカス）は setMode に任せる。
+function showNote(path: string, text: string, mode = state.mode): void {
+  state.currentPath = path;
+  setDoc(text);
+  saveLastNote(path);
+  emptyEl.hidden = true;
+  setMode(mode);
+  notify();
+  void updateTitle();
 }
 
 export async function selectNote(path: string): Promise<void> {
@@ -144,36 +169,20 @@ export async function selectNote(path: string): Promise<void> {
     notify();
     return;
   }
-  setDoc(text);
-  saveLastNote(path);
-  if (state.mode === "preview") renderPreview();
-  editorEl.hidden = state.mode === "preview";
-  emptyEl.hidden = true;
-  notify();
-  void updateTitle();
-  if (state.mode === "edit") focusEditor();
+  showNote(path, text);
 }
 
 export async function newNote(): Promise<void> {
   // 現在のメモが空なら、新規作成せずそれを使う。
   if (state.currentPath && getDoc().trim() === "") {
     setMode("edit");
-    focusEditor();
     return;
   }
   await commitCurrent();
   const path = joinPath(state.workspace, `note-${Date.now()}.md`);
   await writeTextFile(path, "");
   state.notes.unshift({ path, title: t("newNote"), snippet: "", mtime: Date.now(), hay: "" });
-  state.currentPath = path;
-  setDoc("");
-  saveLastNote(path);
-  setMode("edit");
-  emptyEl.hidden = true;
-  editorEl.hidden = false;
-  notify();
-  void updateTitle();
-  focusEditor();
+  showNote(path, "", "edit");
 }
 
 export async function deleteNote(path: string): Promise<void> {

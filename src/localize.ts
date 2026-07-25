@@ -23,29 +23,27 @@ import { updateModeLabel, updateTitle } from "./view-modes";
 // ============================================================================
 // index.html に直接書かれた静的ラベル（title 属性など）は起動時の既定値でしかない。
 // 起動時と言語切替時にここでまとめて上書きする。
-function applyStaticText(): void {
-  // title だけを持つボタン。
-  const tips: [HTMLElement, MsgKey][] = [
-    [btnSidebar, "tipSidebar"],
-    [btnSearch, "tipSearch"],
-    [btnTheme, "tipTheme"],
-    [btnToggle, "tipToggleMode"],
-    [wsBtn, "tipWorkspace"],
-    [btnNew, "tipNewNote"],
-  ];
-  for (const [el, key] of tips) el.title = t(key);
-  btnSettings.title = `${t("tipSettings")} (?)`;
+// ツールチップを貼るボタンと、その文言のキー。
+// aria が true のものはアイコンのみなので、読み上げ用の名前も同じ文言で付ける。
+const TIPS: [HTMLElement, MsgKey, boolean?][] = [
+  [btnSidebar, "tipSidebar"],
+  [btnSearch, "tipSearch"],
+  [btnTheme, "tipTheme"],
+  [btnToggle, "tipToggleMode"],
+  [wsBtn, "tipWorkspace"],
+  [btnNew, "tipNewNote"],
+  [winMin, "tipMinimize", true],
+  [winMax, "tipMaximize", true],
+  [winClose, "tipClose", true],
+];
 
-  // ウィンドウ操作はアイコンのみなので読み上げ用の名前も要る。
-  const labeled: [HTMLElement, MsgKey][] = [
-    [winMin, "tipMinimize"],
-    [winMax, "tipMaximize"],
-    [winClose, "tipClose"],
-  ];
-  for (const [el, key] of labeled) {
-    el.title = t(key);
-    el.setAttribute("aria-label", t(key));
+function applyStaticText(): void {
+  for (const [target, key, aria] of TIPS) {
+    target.title = t(key);
+    if (aria) target.setAttribute("aria-label", t(key));
   }
+  // 設定だけはキー表記を添える。
+  btnSettings.title = `${t("tipSettings")} (?)`;
 
   btnNewLabel.textContent = t("newNote");
   searchInputEl.placeholder = t("searchPlaceholder");

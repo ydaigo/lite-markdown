@@ -73,6 +73,20 @@ searchInputEl.addEventListener("keydown", (e) => {
 // メニュー外クリックで閉じる
 document.addEventListener("click", () => toggleWsMenu(false));
 
+// Ctrl / Cmd と組み合わせるショートカット（一覧は shortcuts.ts、ここは動作）。
+const MOD_KEYS: Record<string, (e: KeyboardEvent) => void> = {
+  n: () => void newNote(),
+  b: () => toggleSidebar(),
+  s: () => void flushSave(),
+  e: () => toggleMode(),
+  h: () => openFindInEditor(true),
+  f: (e) => {
+    // Shift 付きはメモ一覧の絞り込み。付いていなければ、メモを開いているときは
+    // エディタ内検索、開いていなければ一覧の絞り込み。
+    if (e.shiftKey || !openFindInEditor(false)) toggleSearch(true);
+  },
+};
+
 // キーボードショートカット
 window.addEventListener("keydown", (e) => {
   // 設定ダイアログが開いていれば Esc で閉じる。
@@ -87,34 +101,11 @@ window.addEventListener("keydown", (e) => {
     toggleSettings();
     return;
   }
-  const mod = e.ctrlKey || e.metaKey;
-  if (!mod) return;
-  const key = e.key.toLowerCase();
-  if (key === "n") {
-    e.preventDefault();
-    void newNote();
-  } else if (key === "b") {
-    e.preventDefault();
-    toggleSidebar();
-  } else if (key === "s") {
-    e.preventDefault();
-    void flushSave();
-  } else if (key === "e") {
-    e.preventDefault();
-    toggleMode();
-  } else if (key === "f") {
-    e.preventDefault();
-    // Shift 付きはメモ一覧の絞り込み。
-    if (e.shiftKey) {
-      toggleSearch(true);
-      return;
-    }
-    // メモを開いていればエディタ内検索、開いていなければ一覧の絞り込み。
-    if (!openFindInEditor(false)) toggleSearch(true);
-  } else if (key === "h") {
-    e.preventDefault();
-    openFindInEditor(true);
-  }
+  if (!e.ctrlKey && !e.metaKey) return;
+  const run = MOD_KEYS[e.key.toLowerCase()];
+  if (!run) return;
+  e.preventDefault();
+  run(e);
 });
 
 // エディタ内の検索パネルを開く。withReplace で置換の行を出すか決める。

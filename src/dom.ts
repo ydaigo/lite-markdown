@@ -38,3 +38,19 @@ export const listEl = $<HTMLDivElement>("note-list");
 export const editorEl = $<HTMLDivElement>("editor");
 export const previewEl = $<HTMLElement>("preview");
 export const emptyEl = $<HTMLDivElement>("empty-state");
+
+// ============================================================================
+// 要素の組み立て
+// ============================================================================
+// 動的に作る UI（メニュー・設定ダイアログ・一覧）はこの 1 行で作る。
+// テキストは textContent で入れるため、パスや文言をそのまま渡してよい。
+export function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string,
+  text?: string,
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}

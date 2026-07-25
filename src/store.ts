@@ -17,8 +17,6 @@ export interface AppState {
   mode: "edit" | "preview";
   searchQuery: string; // 検索クエリ（小文字）
   theme: "light" | "dark";
-  loading: boolean; // プログラムからの setDoc 中は自動保存をスキップ
-  saveTimer: number | undefined;
 }
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -31,8 +29,6 @@ export const state: AppState = {
   mode: "edit",
   searchQuery: "",
   theme: prefersDark ? "dark" : "light",
-  loading: false,
-  saveTimer: undefined,
 };
 
 type Listener = () => void;

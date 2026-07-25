@@ -46,6 +46,11 @@
   box-sizing: border-box;
 }
 
+/* hidden を付けたら必ず消える（display を指定した要素にも効かせる）。 */
+[hidden] {
+  display: none !important;
+}
+
 #error-bar {
   position: fixed;
   left: 0;
@@ -58,10 +63,6 @@
   padding: 6px 12px;
   white-space: pre-wrap;
   word-break: break-word;
-}
-
-#error-bar[hidden] {
-  display: none;
 }
 
 #toast {
@@ -77,9 +78,6 @@
   border-radius: 8px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   pointer-events: none;
-}
-#toast[hidden] {
-  display: none;
 }
 
 html,
@@ -327,10 +325,6 @@ body {
   flex: 0 0 auto;
 }
 
-#search-bar[hidden] {
-  display: none;
-}
-
 #search-input {
   width: 100%;
   font: inherit;
@@ -495,12 +489,6 @@ body {
 
 #editor .cm-scroller {
   padding: 8px 4px;
-}
-
-#editor[hidden],
-#preview[hidden],
-#empty-state[hidden] {
-  display: none;
 }
 
 #empty-state {

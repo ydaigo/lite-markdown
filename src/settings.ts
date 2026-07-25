@@ -1,4 +1,5 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { el } from "./dom";
 import { LS } from "./constants";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
 import { applyLanguage } from "./localize";
@@ -41,34 +42,24 @@ export function closeSettings(): void {
 
 // 見出し付きのセクションを作る。
 function section(titleText: string, ...children: Node[]): HTMLDivElement {
-  const sec = document.createElement("div");
-  sec.className = "set-section";
-  const head = document.createElement("div");
-  head.className = "set-section-title";
-  head.textContent = titleText;
-  sec.append(head, ...children);
+  const sec = el("div", "set-section");
+  sec.append(el("div", "set-section-title", titleText), ...children);
   return sec;
 }
 
 // 「説明 + 操作部」の 1 行を作る。
 function row(labelText: string, control?: Node): HTMLDivElement {
-  const r = document.createElement("div");
-  r.className = "set-row";
-  const desc = document.createElement("span");
-  desc.className = "set-desc";
-  desc.textContent = labelText;
-  r.append(desc);
+  const r = el("div", "set-row");
+  r.append(el("span", "set-desc", labelText));
   if (control) r.append(control);
   return r;
 }
 
 function languageSection(): HTMLDivElement {
-  const select = document.createElement("select");
-  select.className = "set-select";
+  const select = el("select", "set-select");
   for (const l of LANGS) {
-    const opt = document.createElement("option");
+    const opt = el("option", undefined, l.label);
     opt.value = l.value;
-    opt.textContent = l.label;
     opt.selected = l.value === getLang();
     select.append(opt);
   }
@@ -81,9 +72,8 @@ function languageSection(): HTMLDivElement {
 }
 
 function updateSection(): HTMLDivElement {
-  const check = document.createElement("input");
+  const check = el("input", "set-check");
   check.type = "checkbox";
-  check.className = "set-check";
   check.checked = UPDATER_BUILD && isAutoUpdateEnabled();
   // 更新機能を含まないビルドでは操作しても意味がないので触らせない。
   check.disabled = !UPDATER_BUILD;
@@ -91,58 +81,39 @@ function updateSection(): HTMLDivElement {
 
   const rows = [row(t("autoUpdateLabel"), check)];
   if (appVersion) {
-    const value = document.createElement("span");
-    value.className = "set-value";
-    value.textContent = `v${appVersion}`;
-    rows.unshift(row(t("versionLabel"), value));
+    rows.unshift(row(t("versionLabel"), el("span", "set-value", `v${appVersion}`)));
   }
 
   const sec = section(t("sectionUpdate"), ...rows);
-  if (!UPDATER_BUILD) {
-    const note = document.createElement("div");
-    note.className = "set-note";
-    note.textContent = t("autoUpdateUnavailable");
-    sec.append(note);
-  }
+  if (!UPDATER_BUILD) sec.append(el("div", "set-note", t("autoUpdateUnavailable")));
   return sec;
 }
 
 function shortcutsSection(): HTMLDivElement {
-  const rows = SHORTCUTS.map((s) => {
-    const keys = document.createElement("span");
-    keys.className = "set-keys";
-    keys.textContent = s.keys;
-    return row(t(s.descKey), keys);
-  });
+  const rows = SHORTCUTS.map((s) => row(t(s.descKey), el("span", "set-keys", s.keys)));
   return section(t("sectionShortcuts"), ...rows);
 }
 
 // ダイアログの中身を現在の設定値で組み立て直す。
 function render(): void {
   if (!overlay) return;
-  const dialog = document.createElement("div");
-  dialog.className = "set-dialog";
 
-  const head = document.createElement("div");
-  head.className = "set-head";
-  const title = document.createElement("div");
-  title.className = "set-title";
-  title.textContent = t("settingsTitle");
-  const close = document.createElement("button");
-  close.className = "set-close";
-  close.textContent = "✕";
+  const close = el("button", "set-close", "✕");
   close.title = t("tipClose");
   close.setAttribute("aria-label", t("tipClose"));
   close.addEventListener("click", () => closeSettings());
-  head.append(title, close);
 
+  const head = el("div", "set-head");
+  head.append(el("div", "set-title", t("settingsTitle")), close);
+
+  const dialog = el("div", "set-dialog");
   dialog.append(head, languageSection(), updateSection(), shortcutsSection());
   overlay.replaceChildren(dialog);
 }
 
 export function openSettings(): void {
   if (overlay) return;
-  const ov = document.createElement("div");
+  const ov = el("div");
   ov.id = "set-overlay";
   // 背景（オーバーレイ自身）クリックで閉じる。
   ov.addEventListener("click", (e) => {

@@ -1,3 +1,5 @@
+import { el } from "./dom";
+
 // ============================================================================
 // 再利用可能なポップアップメニュー（右クリック / ⋯ ボタン用）
 // ============================================================================
@@ -18,12 +20,9 @@ export function closeContextMenu(): void {
 // 画面座標 (x, y) にメニューを開く。同時に開くのは1つだけ。
 export function openContextMenu(items: MenuItem[], x: number, y: number): void {
   closeContextMenu();
-  const menu = document.createElement("div");
-  menu.className = "ctx-menu";
+  const menu = el("div", "ctx-menu");
   for (const it of items) {
-    const b = document.createElement("button");
-    b.className = "ctx-item" + (it.danger ? " danger" : "");
-    b.textContent = it.label;
+    const b = el("button", "ctx-item" + (it.danger ? " danger" : ""), it.label);
     b.addEventListener("click", (e) => {
       e.stopPropagation();
       closeContextMenu();
