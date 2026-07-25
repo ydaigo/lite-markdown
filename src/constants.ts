@@ -7,6 +7,8 @@ export const LS = {
   workspaces: "lm.workspaces",
   current: "lm.workspace",
   theme: "lm.theme",
+  lang: "lm.lang",
+  autoUpdate: "lm.autoUpdate",
   lastNote: "lm.lastNote", // { [workspace]: notePath }
 } as const;
 
@@ -22,30 +24,4 @@ export const UPDATE_CHECK_DELAY_MS = 3000;
 // 既定ワークスペースのフォルダ名（ホーム直下に作成）。
 export const DEFAULT_WORKSPACE_DIR = "lite-markdown-notes";
 
-// UI 文言。
-export const MSG = {
-  appName: "lite-markdown",
-  newNote: "新規メモ",
-  noExtraText: "追加テキストなし",
-  emptyNote: "（このメモは空です）",
-  noSearchResult: "該当するメモがありません",
-  noWorkspace: "（未選択）",
-  chooseFolder: "📁 フォルダを選択…",
-  chooseWorkspaceTitle: "ワークスペースにするフォルダを選択",
-  editorPlaceholder: "メモを入力…",
-  editLabel: "エディタ",
-  previewLabel: "プレビュー",
-  deleteConfirm: "このメモを削除しますか？",
-  cannotOpenFolder: "このフォルダは開けません（ホームフォルダ内を選んでください）",
-  imageSaveFailed: "画像の保存に失敗しました",
-  saveFailed: "メモの保存に失敗しました",
-  deleteFailed: "メモの削除に失敗しました",
-  menuMore: "操作",
-  menuCopyPath: "パスをコピー",
-  menuReveal: "ディレクトリを開く",
-  menuDelete: "削除",
-  copyPathDone: "パスをコピーしました",
-  copyPathFailed: "パスのコピーに失敗しました",
-  revealFailed: "フォルダを開けませんでした",
-  shortcutsTitle: "キーボードショートカット",
-} as const;
+// UI 文言は言語ごとに切り替わるため i18n.ts に置く（t() 経由で取得）。

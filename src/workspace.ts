@@ -8,7 +8,8 @@ import { readJSON, writeJSON } from "./storage";
 import { mkdirSafe } from "./fs-utils";
 import { showError } from "./errors";
 import { baseName } from "./utils";
-import { LS, MSG } from "./constants";
+import { LS } from "./constants";
+import { t } from "./i18n";
 
 // ============================================================================
 // ワークスペース（フォルダ）
@@ -39,7 +40,7 @@ export async function setWorkspace(path: string): Promise<void> {
     editorEl.hidden = true;
     emptyEl.hidden = false;
     notify();
-    showError(`${MSG.cannotOpenFolder}: ${String(e)}`);
+    showError(`${t("cannotOpenFolder")}: ${String(e)}`);
     return;
   }
 
@@ -55,7 +56,7 @@ export async function setWorkspace(path: string): Promise<void> {
 }
 
 export async function chooseWorkspaceFolder(): Promise<void> {
-  const dir = await open({ directory: true, multiple: false, title: MSG.chooseWorkspaceTitle });
+  const dir = await open({ directory: true, multiple: false, title: t("chooseWorkspaceTitle") });
   if (typeof dir === "string") await setWorkspace(dir);
 }
 
@@ -82,7 +83,7 @@ export function toggleWsMenu(show?: boolean): void {
   wsMenuEl.append(sep);
   const choose = document.createElement("button");
   choose.className = "ws-item ws-choose";
-  choose.textContent = MSG.chooseFolder;
+  choose.textContent = t("chooseFolder");
   choose.addEventListener("click", () => {
     toggleWsMenu(false);
     void chooseWorkspaceFolder();

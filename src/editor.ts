@@ -13,7 +13,7 @@ import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from "@code
 import { tags } from "@lezer/highlight";
 import { editorEl } from "./dom";
 import { state } from "./store";
-import { MSG } from "./constants";
+import { t, getLang } from "./i18n";
 
 // ============================================================================
 // CodeMirror エディタ
@@ -55,7 +55,8 @@ const cmTheme = () => (state.theme === "dark" ? darkTheme : lightTheme);
 
 // 検索 / 置換パネルの日本語化。キーは @codemirror/search が使う英語フレーズ。
 // "$" は件数・行番号に置き換わるプレースホルダなので残すこと。
-const searchPhrases = EditorState.phrases.of({
+// en は CodeMirror の既定表記そのものなので訳を渡さない。
+const jaPhrases = {
   Find: "検索",
   Replace: "置換後",
   next: "次へ",
@@ -73,7 +74,14 @@ const searchPhrases = EditorState.phrases.of({
   "on line": "行目",
   "replaced match on line $": "$ 行目を置換しました",
   "replaced $ matches": "$ 件を置換しました",
-});
+};
+
+// 言語に依存するエディタ設定（検索パネルの文言・プレースホルダ）。
+const langCompartment = new Compartment();
+const langExtensions = () => [
+  EditorState.phrases.of(getLang() === "ja" ? jaPhrases : {}),
+  placeholder(t("editorPlaceholder")),
+];
 
 // エディタ由来のイベントを外部（notes/images）へ渡すためのハンドラ。
 // 循環参照を避けるため、具体的な処理は起動時に登録する。
@@ -97,13 +105,12 @@ const view = new EditorView({
       highlightActiveLine(),
       markdown(),
       search({ top: true }),
-      searchPhrases,
+      langCompartment.of(langExtensions()),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       syntaxHighlighting(mdHighlight),
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       themeCompartment.of(cmTheme()),
       EditorView.lineWrapping,
-      placeholder(MSG.editorPlaceholder),
       EditorView.updateListener.of((u) => {
         if (u.docChanged && !state.loading) docChangeHandler?.();
       }),
@@ -147,6 +154,11 @@ export function focusEditor(): void {
 // 現在のテーマ設定をエディタへ反映する。
 export function applyEditorTheme(): void {
   view.dispatch({ effects: themeCompartment.reconfigure(cmTheme()) });
+}
+
+// 現在の言語設定をエディタへ反映する。
+export function applyEditorLang(): void {
+  view.dispatch({ effects: langCompartment.reconfigure(langExtensions()) });
 }
 
 // エディタがフォーカスを保持しているか（キー割り当ての振り分けに使用）。

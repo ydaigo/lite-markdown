@@ -4,9 +4,14 @@ import { state, notify } from "./store";
 import { newNote, flushSave, scheduleSave } from "./notes";
 import { toggleMode, toggleTheme, toggleSearch } from "./view-modes";
 import { toggleWsMenu } from "./workspace";
-import { setDocChangeHandler, setImagePasteHandler, openEditorSearch, editorHasFocus } from "./editor";
+import {
+  setDocChangeHandler,
+  setImagePasteHandler,
+  openEditorSearch,
+  editorHasFocus,
+} from "./editor";
 import { insertPastedImage } from "./images";
-import { toggleShortcuts, closeShortcuts, shortcutsOpen } from "./shortcuts";
+import { toggleSettings, closeSettings, settingsOpen } from "./settings";
 import { closeContextMenu } from "./context-menu";
 
 // ============================================================================
@@ -26,9 +31,9 @@ $<HTMLButtonElement>("btn-sidebar").addEventListener("click", () =>
   appEl.classList.toggle("sidebar-hidden"),
 );
 $<HTMLButtonElement>("btn-search").addEventListener("click", () => toggleSearch());
-$<HTMLButtonElement>("btn-help").addEventListener("click", () => {
+$<HTMLButtonElement>("btn-settings").addEventListener("click", () => {
   closeContextMenu();
-  toggleShortcuts();
+  toggleSettings();
 });
 btnToggle.addEventListener("click", () => toggleMode());
 btnTheme.addEventListener("click", () => toggleTheme());
@@ -59,16 +64,16 @@ document.addEventListener("click", () => toggleWsMenu(false));
 
 // キーボードショートカット
 window.addEventListener("keydown", (e) => {
-  // ショートカット一覧モーダルが開いていれば Esc で閉じる。
-  if (e.key === "Escape" && shortcutsOpen()) {
-    closeShortcuts();
+  // 設定ダイアログが開いていれば Esc で閉じる。
+  if (e.key === "Escape" && settingsOpen()) {
+    closeSettings();
     return;
   }
-  // 入力中でなければ「?」でショートカット一覧を開閉。
+  // 入力中でなければ「?」で設定ダイアログを開閉。
   if (e.key === "?" && !isTypingTarget(e.target)) {
     e.preventDefault();
     closeContextMenu();
-    toggleShortcuts();
+    toggleSettings();
     return;
   }
   const mod = e.ctrlKey || e.metaKey;

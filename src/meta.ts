@@ -1,4 +1,4 @@
-import { MSG } from "./constants";
+import { t } from "./i18n";
 
 // ============================================================================
 // メモのタイトル/抜粋の導出（純粋関数）
@@ -19,5 +19,5 @@ export function deriveMeta(text: string): { title: string; snippet: string } {
       break;
     }
   }
-  return { title: title || MSG.newNote, snippet };
+  return { title: title || t("newNote"), snippet };
 }

@@ -4,7 +4,7 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { previewEl } from "./dom";
 import { state } from "./store";
 import { getDoc } from "./editor";
-import { MSG } from "./constants";
+import { t } from "./i18n";
 
 // ============================================================================
 // プレビュー（Markdown → HTML）
@@ -16,7 +16,7 @@ export function renderPreview(): void {
   const text = getDoc();
   if (text.trim() === "") {
     // 空メモをプレビューしたときに真っ白にならないようプレースホルダを表示。
-    previewEl.innerHTML = `<p class="preview-empty">${MSG.emptyNote}</p>`;
+    previewEl.innerHTML = `<p class="preview-empty">${t("emptyNote")}</p>`;
     return;
   }
   const html = marked.parse(text, { async: false }) as string;

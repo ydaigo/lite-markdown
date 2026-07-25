@@ -2,7 +2,7 @@ import { state, subscribe } from "./store";
 import { listEl, emptyEl, wsNameEl } from "./dom";
 import { baseName } from "./utils";
 import { formatDate } from "./format";
-import { MSG } from "./constants";
+import { t, localeOf } from "./i18n";
 import { selectNote, deleteNote } from "./notes";
 import { openContextMenu, type MenuItem } from "./context-menu";
 import { copyPath, revealInDir } from "./note-actions";
@@ -14,9 +14,9 @@ import { copyPath, revealInDir } from "./note-actions";
 // メモ1件に対するコンテキストメニュー項目。
 function noteMenuItems(path: string): MenuItem[] {
   return [
-    { label: MSG.menuCopyPath, action: () => void copyPath(path) },
-    { label: MSG.menuReveal, action: () => void revealInDir(path) },
-    { label: MSG.menuDelete, danger: true, action: () => void deleteNote(path) },
+    { label: t("menuCopyPath"), action: () => void copyPath(path) },
+    { label: t("menuReveal"), action: () => void revealInDir(path) },
+    { label: t("menuDelete"), danger: true, action: () => void deleteNote(path) },
   ];
 }
 
@@ -30,7 +30,7 @@ export function renderList(): void {
   if (q && visible.length === 0) {
     const none = document.createElement("div");
     none.className = "list-empty";
-    none.textContent = MSG.noSearchResult;
+    none.textContent = t("noSearchResult");
     listEl.append(none);
     emptyEl.hidden = true;
     return;
@@ -49,15 +49,15 @@ export function renderList(): void {
     sub.className = "note-sub";
     const date = document.createElement("span");
     date.className = "note-date";
-    date.textContent = formatDate(note.mtime);
+    date.textContent = formatDate(note.mtime, localeOf());
     const snip = document.createElement("span");
     snip.className = "note-snippet";
-    snip.textContent = note.snippet || MSG.noExtraText;
+    snip.textContent = note.snippet || t("noExtraText");
     sub.append(date, snip);
 
     const more = document.createElement("button");
     more.className = "note-more";
-    more.title = MSG.menuMore;
+    more.title = t("menuMore");
     more.textContent = "⋯";
     more.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -77,7 +77,7 @@ export function renderList(): void {
 }
 
 export function updateWsName(): void {
-  wsNameEl.textContent = state.workspace ? baseName(state.workspace) : MSG.noWorkspace;
+  wsNameEl.textContent = state.workspace ? baseName(state.workspace) : t("noWorkspace");
 }
 
 // 状態が変わるたびに一覧を再描画する。

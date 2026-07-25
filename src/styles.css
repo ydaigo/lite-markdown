@@ -13,7 +13,7 @@
   --sidebar-bg: #ececec;
   --sidebar-border: #dcdcdc;
   --item-hover: #e2e2e2;
-  --sel-bg: #ffe08a;         /* macOS メモ風の黄色い選択 */
+  --sel-bg: #ffe08a; /* macOS メモ風の黄色い選択 */
   --sel-fg: #1a1a1a;
   --sel-sub: #7a6a2f;
   --menu-bg: #ffffff;
@@ -90,8 +90,9 @@ body,
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN",
-    "Yu Gothic", Meiryo, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
+    sans-serif;
   background: var(--bg);
   color: var(--fg);
   overflow: hidden;
@@ -488,8 +489,7 @@ body {
 
 #editor .cm-editor {
   height: 100%;
-  font-family: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", Menlo,
-    monospace;
+  font-family: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 14px;
 }
 
@@ -665,7 +665,7 @@ body {
   color: #dc2626;
 }
 
-/* ============================ ショートカット一覧モーダル ============================ */
+/* ============================ 設定ダイアログ ============================ */
 #sc-overlay {
   position: fixed;
   inset: 0;
@@ -727,4 +727,47 @@ body {
   font-family: "SFMono-Regular", Consolas, Menlo, monospace;
   font-size: 12px;
   color: var(--muted);
+}
+.sc-section + .sc-section {
+  margin-top: 18px;
+}
+.sc-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+/* セクション内の先頭行は見出しの下線と重ならないようにする。 */
+.sc-section-title + .sc-row {
+  border-top: none;
+}
+.sc-note {
+  font-size: 11px;
+  color: var(--muted);
+  padding-bottom: 4px;
+}
+.sc-select {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 13px;
+  padding: 3px 6px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sc-check {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+.sc-check:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }

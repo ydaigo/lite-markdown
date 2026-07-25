@@ -11,7 +11,8 @@ import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
 import { readJSON, writeJSON } from "./storage";
 import { withErrorNotice } from "./errors";
-import { LS, MSG, SAVE_DEBOUNCE_MS } from "./constants";
+import { LS, SAVE_DEBOUNCE_MS } from "./constants";
+import { t } from "./i18n";
 
 // 更新時刻の降順（新しい順）に並べ替える。
 const sortByMtimeDesc = (list: NoteMeta[]): void => {
@@ -44,7 +45,7 @@ export async function flushSave(): Promise<void> {
   const path = state.currentPath;
   if (!path) return;
   const text = getDoc();
-  const ok = await withErrorNotice(MSG.saveFailed, () => writeTextFile(path, text));
+  const ok = await withErrorNotice(t("saveFailed"), () => writeTextFile(path, text));
   if (!ok) return;
   const meta = state.notes.find((n) => n.path === path);
   if (meta) {
@@ -133,7 +134,7 @@ export async function newNote(): Promise<void> {
   await commitCurrent();
   const path = await join(state.workspace, `note-${Date.now()}.md`);
   await writeTextFile(path, "");
-  state.notes.unshift({ path, title: MSG.newNote, snippet: "", mtime: Date.now(), hay: "" });
+  state.notes.unshift({ path, title: t("newNote"), snippet: "", mtime: Date.now(), hay: "" });
   state.currentPath = path;
   setDoc("");
   saveLastNote(path);
@@ -146,10 +147,10 @@ export async function newNote(): Promise<void> {
 }
 
 export async function deleteNote(path: string): Promise<void> {
-  const ok = await ask(MSG.deleteConfirm, { title: MSG.appName, kind: "warning" });
+  const ok = await ask(t("deleteConfirm"), { title: t("appName"), kind: "warning" });
   if (!ok) return;
   // 削除に失敗したら通知するが、一覧からは取り除く（多くは「既に無い」ため）。
-  await withErrorNotice(MSG.deleteFailed, () => remove(path));
+  await withErrorNotice(t("deleteFailed"), () => remove(path));
   removeNoteByPath(path);
   if (state.currentPath === path) {
     state.currentPath = null;

@@ -3,7 +3,8 @@ import { editorEl, previewEl, btnToggle, btnTheme, appEl, searchBarEl, searchInp
 import { appWindow } from "./app-window";
 import { focusEditor, applyEditorTheme } from "./editor";
 import { renderPreview } from "./preview";
-import { LS, MSG } from "./constants";
+import { LS } from "./constants";
+import { t } from "./i18n";
 
 // ============================================================================
 // 編集/プレビューの切替
@@ -14,11 +15,11 @@ export function setMode(next: "edit" | "preview"): void {
     renderPreview();
     editorEl.hidden = true;
     previewEl.hidden = false;
-    btnToggle.textContent = MSG.editLabel;
+    btnToggle.textContent = t("editLabel");
   } else {
     previewEl.hidden = true;
     editorEl.hidden = state.currentPath === null;
-    btnToggle.textContent = MSG.previewLabel;
+    btnToggle.textContent = t("previewLabel");
     if (state.currentPath !== null) focusEditor();
   }
 }
@@ -46,8 +47,8 @@ export function toggleTheme(): void {
 // ============================================================================
 export async function updateTitle(): Promise<void> {
   const cur = state.notes.find((n) => n.path === state.currentPath);
-  const name = cur ? cur.title : MSG.appName;
-  await appWindow.setTitle(`${name} — ${MSG.appName}`);
+  const name = cur ? cur.title : t("appName");
+  await appWindow.setTitle(`${name} — ${t("appName")}`);
 }
 
 // ============================================================================

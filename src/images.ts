@@ -5,7 +5,8 @@ import { state } from "./store";
 import { mkdirSafe } from "./fs-utils";
 import { showError } from "./errors";
 import { extFromMime } from "./mime";
-import { IMAGE_DIR, MSG } from "./constants";
+import { IMAGE_DIR } from "./constants";
+import { t } from "./i18n";
 
 // ============================================================================
 // 画像の貼り付け（<workspace>/image/ に保存し、Markdown に挿入）
@@ -22,6 +23,6 @@ export async function insertPastedImage(file: File, v: EditorView): Promise<void
     // 相対パスで参照（ノートフォルダごと移動しても壊れない）
     v.dispatch(v.state.replaceSelection(`![](${IMAGE_DIR}/${name})`));
   } catch (e) {
-    showError(`${MSG.imageSaveFailed}: ${String(e)}`);
+    showError(`${t("imageSaveFailed")}: ${String(e)}`);
   }
 }
