@@ -161,11 +161,7 @@ export function applyEditorLang(): void {
   view.dispatch({ effects: langCompartment.reconfigure(langExtensions()) });
 }
 
-// エディタがフォーカスを保持しているか（キー割り当ての振り分けに使用）。
-export const editorHasFocus = (): boolean => view.hasFocus;
-
-// 検索・置換パネルを開いてエディタにフォーカスする。
+// 検索・置換パネルを開く（CodeMirror 側が検索欄にフォーカスを入れる）。
 export function openEditorSearch(): void {
   openSearchPanel(view);
-  view.focus();
 }

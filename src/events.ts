@@ -16,14 +16,9 @@ import {
 } from "./dom";
 import { state, notify } from "./store";
 import { newNote, flushSave, scheduleSave } from "./notes";
-import { toggleMode, toggleTheme, toggleSearch } from "./view-modes";
+import { setMode, toggleMode, toggleTheme, toggleSearch } from "./view-modes";
 import { toggleWsMenu } from "./workspace";
-import {
-  setDocChangeHandler,
-  setImagePasteHandler,
-  openEditorSearch,
-  editorHasFocus,
-} from "./editor";
+import { setDocChangeHandler, setImagePasteHandler, openEditorSearch } from "./editor";
 import { insertPastedImage } from "./images";
 import { toggleSettings, closeSettings, settingsOpen } from "./settings";
 import { closeContextMenu } from "./context-menu";
@@ -101,16 +96,29 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     toggleMode();
   } else if (key === "f") {
-    // エディタにフォーカスがあるときは CodeMirror の検索に委ねる。
-    if (editorHasFocus()) return;
     e.preventDefault();
-    toggleSearch(true);
+    // Shift 付きはメモ一覧の絞り込み。
+    if (e.shiftKey) {
+      toggleSearch(true);
+      return;
+    }
+    // メモを開いていればエディタ内検索、開いていなければ一覧の絞り込み。
+    if (!openFindInEditor()) toggleSearch(true);
   } else if (key === "h") {
-    // エディタ内 置換パネル。
+    // エディタ内 置換パネル（検索パネルと共通）。
     e.preventDefault();
-    if (state.currentPath) openEditorSearch();
+    openFindInEditor();
   }
 });
+
+// エディタ内の検索/置換パネルを開く。プレビュー中は編集モードへ戻す。
+// メモを開いていないときは何もせず false を返す。
+function openFindInEditor(): boolean {
+  if (!state.currentPath) return false;
+  if (state.mode === "preview") setMode("edit");
+  openEditorSearch();
+  return true;
+}
 
 // 入力欄やエディタ（contenteditable）、設定ダイアログの選択欄に
 // フォーカスがあるかを判定する。

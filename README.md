@@ -42,7 +42,8 @@ Tauri v2 製の、ものすごく軽量な Markdown / メモアプリ（Windows 
 | --- | --- |
 | `Ctrl/Cmd + N` | 新規メモ |
 | `Ctrl/Cmd + E` | エディタ ⇄ プレビュー 切替 |
-| `Ctrl/Cmd + F` | メモ検索（一覧）/ エディタ内検索 |
+| `Ctrl/Cmd + F` | エディタ内検索 |
+| `Ctrl/Cmd + Shift + F` | メモ検索（一覧） |
 | `Ctrl/Cmd + H` | エディタ内 置換 |
 | `?` | 設定を開く |
 | `Esc` | 検索 / ダイアログを閉じる |

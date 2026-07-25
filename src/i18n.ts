@@ -50,7 +50,7 @@ const ja = {
 
   // タイトルバー / サイドバー（index.html の静的ラベル）
   tipSidebar: "サイドバー表示切替",
-  tipSearch: "検索 (Ctrl/Cmd+F)",
+  tipSearch: "メモ検索 (Ctrl/Cmd+Shift+F)",
   tipSettings: "設定",
   tipToggleMode: "プレビュー切替 (Ctrl/Cmd+E)",
   tipTheme: "テーマ切替",
@@ -74,7 +74,8 @@ const ja = {
   // ショートカットの説明
   scNewNote: "新規メモ",
   scToggleMode: "編集 / プレビュー切替",
-  scSearch: "メモ検索（一覧）/ エディタ内検索",
+  scSearch: "エディタ内検索",
+  scSearchNotes: "メモ検索（一覧）",
   scReplace: "エディタ内 置換",
   scSettings: "設定を開く",
   scEscape: "検索 / ダイアログを閉じる",
@@ -113,7 +114,7 @@ const en: Record<MsgKey, string> = {
   menuDelete: "Delete",
 
   tipSidebar: "Toggle sidebar",
-  tipSearch: "Search (Ctrl/Cmd+F)",
+  tipSearch: "Search notes (Ctrl/Cmd+Shift+F)",
   tipSettings: "Settings",
   tipToggleMode: "Toggle preview (Ctrl/Cmd+E)",
   tipTheme: "Toggle theme",
@@ -135,7 +136,8 @@ const en: Record<MsgKey, string> = {
 
   scNewNote: "New note",
   scToggleMode: "Toggle editor / preview",
-  scSearch: "Search notes (list) / search in editor",
+  scSearch: "Search in editor",
+  scSearchNotes: "Search notes (list)",
   scReplace: "Replace in editor",
   scSettings: "Open settings",
   scEscape: "Close search / dialog",
