@@ -10,7 +10,6 @@ export interface Shortcut {
 
 export const SHORTCUTS: Shortcut[] = [
   { keys: "Ctrl / Cmd + N", description: "新規メモ" },
-  { keys: "Ctrl / Cmd + S", description: "保存" },
   { keys: "Ctrl / Cmd + E", description: "編集 / プレビュー切替" },
   { keys: "Ctrl / Cmd + F", description: "メモ検索（一覧）/ エディタ内検索" },
   { keys: "Ctrl / Cmd + H", description: "エディタ内 置換" },

@@ -53,6 +53,28 @@ const mdHighlight = HighlightStyle.define([
 
 const cmTheme = () => (state.theme === "dark" ? darkTheme : lightTheme);
 
+// 検索 / 置換パネルの日本語化。キーは @codemirror/search が使う英語フレーズ。
+// "$" は件数・行番号に置き換わるプレースホルダなので残すこと。
+const searchPhrases = EditorState.phrases.of({
+  Find: "検索",
+  Replace: "置換後",
+  next: "次へ",
+  previous: "前へ",
+  all: "すべて選択",
+  "match case": "大文字小文字を区別",
+  regexp: "正規表現",
+  "by word": "単語単位",
+  replace: "置換",
+  "replace all": "すべて置換",
+  close: "閉じる",
+  "Go to line": "行へ移動",
+  go: "移動",
+  "current match": "現在の一致",
+  "on line": "行目",
+  "replaced match on line $": "$ 行目を置換しました",
+  "replaced $ matches": "$ 件を置換しました",
+});
+
 // エディタ由来のイベントを外部（notes/images）へ渡すためのハンドラ。
 // 循環参照を避けるため、具体的な処理は起動時に登録する。
 let docChangeHandler: (() => void) | null = null;
@@ -75,6 +97,7 @@ const view = new EditorView({
       highlightActiveLine(),
       markdown(),
       search({ top: true }),
+      searchPhrases,
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       syntaxHighlighting(mdHighlight),
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
