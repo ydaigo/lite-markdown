@@ -5,18 +5,19 @@ import { formatDate } from "./format";
 import { t, localeOf } from "./i18n";
 import { selectNote, deleteNote } from "./notes";
 import { openContextMenu, type MenuItem } from "./context-menu";
-import { copyPath, revealInDir, openInNewWindow } from "./note-actions";
+import { copyPath, openInNewWindow } from "./note-actions";
 
 // ============================================================================
 // サイドバー描画
 // ============================================================================
 
 // メモ1件に対するコンテキストメニュー項目。
+// フォルダを開く操作はメモごとに出さない（どのメモでもワークスペースは同じ）。
+// サイドバー上部の ⋯ から開く（workspace.ts）。
 function noteMenuItems(path: string): MenuItem[] {
   return [
     { label: t("menuOpenInNewWindow"), action: () => void openInNewWindow(path) },
     { label: t("menuCopyPath"), action: () => void copyPath(path) },
-    { label: t("menuReveal"), action: () => void revealInDir(path) },
     { label: t("menuDelete"), danger: true, action: () => void deleteNote(path) },
   ];
 }

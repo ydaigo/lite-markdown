@@ -1,4 +1,4 @@
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openPath } from "@tauri-apps/plugin-opener";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { state } from "./store";
@@ -8,7 +8,7 @@ import { NOTE_WINDOW } from "./constants";
 import { t } from "./i18n";
 
 // ============================================================================
-// メモ単位のネイティブ操作
+// ネイティブ操作（メモ / フォルダ）
 // ============================================================================
 
 // 絶対パスをクリップボードへコピーする。
@@ -17,9 +17,9 @@ export async function copyPath(path: string): Promise<void> {
   if (ok) showToast(t("copyPathDone"));
 }
 
-// OS のファイルマネージャ（Finder / エクスプローラー）で当該ファイルを選択表示する。
-export async function revealInDir(path: string): Promise<void> {
-  await withErrorNotice(t("revealFailed"), () => revealItemInDir(path));
+// OS のファイルマネージャ（Finder / エクスプローラー）でフォルダの中身を開く。
+export async function openFolder(dir: string): Promise<void> {
+  await withErrorNotice(t("openFolderFailed"), () => openPath(dir));
 }
 
 // ============================================================================

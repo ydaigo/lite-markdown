@@ -40,14 +40,15 @@ const ja = {
   deleteFailed: "メモの削除に失敗しました",
   copyPathDone: "パスをコピーしました",
   copyPathFailed: "パスのコピーに失敗しました",
-  revealFailed: "フォルダを開けませんでした",
+  openFolderFailed: "フォルダを開けませんでした",
   newWindowFailed: "新しいウィンドウを開けませんでした",
 
-  // メモの操作メニュー
+  // 操作メニュー（メモ / ワークスペース）
   menuMore: "操作",
   menuOpenInNewWindow: "新規ウィンドウで開く",
   menuCopyPath: "パスをコピー",
-  menuReveal: "ディレクトリを開く",
+  menuOpenFolder: "ディレクトリを開く",
+  menuRemoveFromHistory: "履歴から削除",
   menuDelete: "削除",
 
   // タイトルバー / サイドバー（index.html の静的ラベル）
@@ -109,13 +110,14 @@ const en: Record<MsgKey, string> = {
   deleteFailed: "Failed to delete the note",
   copyPathDone: "Path copied",
   copyPathFailed: "Failed to copy the path",
-  revealFailed: "Failed to open the folder",
+  openFolderFailed: "Failed to open the folder",
   newWindowFailed: "Failed to open a new window",
 
   menuMore: "Actions",
   menuOpenInNewWindow: "Open in new window",
   menuCopyPath: "Copy path",
-  menuReveal: "Show in folder",
+  menuOpenFolder: "Open folder",
+  menuRemoveFromHistory: "Remove from history",
   menuDelete: "Delete",
 
   tipSidebar: "Toggle sidebar (Ctrl/Cmd+B)",

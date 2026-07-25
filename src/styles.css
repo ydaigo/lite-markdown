@@ -216,7 +216,7 @@ body {
   display: none;
 }
 
-/* ワークスペースヘッダ */
+/* ワークスペースヘッダ。position:relative は #ws-menu の絶対配置の基準。 */
 #ws-header {
   position: relative;
   padding: 8px 10px 6px;
@@ -256,6 +256,25 @@ body {
   font-size: 11px;
 }
 
+/* 履歴 1 件ごとの ⋯。見た目はメモ一覧の .note-more と揃える。 */
+.ws-more {
+  flex: 0 0 auto;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  padding: 6px 5px;
+  border-radius: 6px;
+}
+
+.ws-more:hover {
+  background: var(--item-hover);
+  color: var(--fg);
+}
+
 /* ワークスペース切替メニュー */
 #ws-menu {
   position: absolute;
@@ -272,7 +291,31 @@ body {
   overflow: auto;
 }
 
+/* 履歴 1 件分の行。切替のボタンと ⋯ を横に並べる。 */
+.ws-row {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+}
+
+.ws-row:hover {
+  background: var(--item-hover);
+}
+
+/* ⋯ は hover 中だけ見せる（場所は常に確保するので行が動かない）。 */
+.ws-row .ws-more {
+  opacity: 0;
+}
+
+.ws-row:hover .ws-more,
+.ws-row .ws-more:focus-visible {
+  opacity: 1;
+}
+
 .ws-item {
+  /* 行の中では flex で伸縮し、単独で置く .ws-choose では幅いっぱいに広がる。 */
+  flex: 1;
+  min-width: 0;
   width: 100%;
   display: flex;
   flex-direction: column;

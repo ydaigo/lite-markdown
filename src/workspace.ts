@@ -2,6 +2,8 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { state, notify } from "./store";
 import { wsMenuEl, el } from "./dom";
+import { openContextMenu, type MenuItem } from "./context-menu";
+import { openFolder } from "./note-actions";
 import { refreshNotes, selectNote, newNote, commitCurrent } from "./notes";
 import { showEmptyState } from "./view-modes";
 import { watchWorkspace } from "./sync";
@@ -21,6 +23,15 @@ function registerWorkspace(path: string): void {
     state.workspaces.unshift(path);
     writeJSON(LS.workspaces, state.workspaces);
   }
+}
+
+// 履歴から外す。フォルダとメモには触らない。
+// 開いているワークスペースは対象外（起動時の復元で registerWorkspace が戻すため）。
+function removeWorkspaceFromHistory(path: string): void {
+  if (path === state.workspace) return;
+  state.workspaces = state.workspaces.filter((w) => w !== path);
+  writeJSON(LS.workspaces, state.workspaces);
+  toggleWsMenu(true); // メニューは開いたまま作り直す
 }
 
 // preferNote を渡すと、前回開いていたメモより優先してそれを開く
@@ -84,6 +95,43 @@ export async function chooseWorkspaceFolder(): Promise<void> {
   if (typeof dir === "string") await setWorkspace(dir);
 }
 
+// 履歴 1 件分に対する操作。開いているワークスペースは履歴から外せない。
+function wsMenuItems(ws: string): MenuItem[] {
+  const items: MenuItem[] = [{ label: t("menuOpenFolder"), action: () => void openFolder(ws) }];
+  if (ws !== state.workspace) {
+    items.push({
+      label: t("menuRemoveFromHistory"),
+      action: () => removeWorkspaceFromHistory(ws),
+    });
+  }
+  return items;
+}
+
+// 履歴 1 件分の行。切替のボタンと ⋯ は別々のボタンにする（button は入れ子にできない）。
+function wsRow(ws: string): HTMLElement {
+  const row = el("div", "ws-row");
+  const b = el("button", "ws-item" + (ws === state.workspace ? " active" : ""));
+  // フォルダ名とパスはそのまま表示する（textContent なのでエスケープ不要）。
+  b.append(el("span", "ws-item-name", baseName(ws)), el("span", "ws-item-path", ws));
+  b.addEventListener("click", () => {
+    toggleWsMenu(false);
+    if (ws !== state.workspace) void setWorkspace(ws);
+  });
+
+  const more = el("button", "ws-more", "⋯");
+  more.title = t("menuMore");
+  more.addEventListener("click", (e) => {
+    // 切替メニューは開いたままにしたいので、外側クリックの購読へ伝えない
+    // （events.ts の toggleWsMenu(false) と context-menu.ts の closeContextMenu）。
+    e.stopPropagation();
+    const r = more.getBoundingClientRect();
+    openContextMenu(wsMenuItems(ws), r.left, r.bottom + 2);
+  });
+
+  row.append(b, more);
+  return row;
+}
+
 // ワークスペース切替メニュー
 export function toggleWsMenu(show?: boolean): void {
   const willShow = show ?? wsMenuEl.hidden;
@@ -91,16 +139,7 @@ export function toggleWsMenu(show?: boolean): void {
     wsMenuEl.hidden = true;
     return;
   }
-  const items: HTMLElement[] = state.workspaces.map((ws) => {
-    const b = el("button", "ws-item" + (ws === state.workspace ? " active" : ""));
-    // フォルダ名とパスはそのまま表示する（textContent なのでエスケープ不要）。
-    b.append(el("span", "ws-item-name", baseName(ws)), el("span", "ws-item-path", ws));
-    b.addEventListener("click", () => {
-      toggleWsMenu(false);
-      if (ws !== state.workspace) void setWorkspace(ws);
-    });
-    return b;
-  });
+  const items: HTMLElement[] = state.workspaces.map(wsRow);
 
   const choose = el("button", "ws-item ws-choose", t("chooseFolder"));
   choose.addEventListener("click", () => {

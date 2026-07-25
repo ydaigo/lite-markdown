@@ -32,7 +32,10 @@
     "fs:allow-create",
     "fs:allow-watch",
     "fs:allow-unwatch",
-    "opener:allow-reveal-item-in-dir",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "$HOME" }, { "path": "$HOME/**" }]
+    },
     "clipboard-manager:allow-write-text"
   ]
 }
