@@ -200,6 +200,24 @@ body {
   color: #fff;
 }
 
+/* macOS: ウィンドウ操作は OS のボタン（赤・黄・緑）に任せる。
+   src-tauri/tauri.macos.conf.json の titleBarStyle: Overlay により、OS のボタンが
+   タイトルバーの左上に重なって描かれるため、自作のボタンは出さず重なる分を空ける。
+   余白は trafficLightPosition の x(14) + ボタン 3 つ（12px × 3 ＋ 間隔 8px × 2）に
+   ゆとりを足した値。位置を変えるときは constants.ts の MAC_TRAFFIC_LIGHT も合わせる。 */
+:root[data-os="mac"] .tb-left {
+  padding-left: 78px;
+}
+
+:root[data-os="mac"] .tb-winctrls {
+  display: none;
+}
+
+/* フルスクリーン中は OS のボタンが隠れるので、空けた余白も畳む。 */
+:root[data-os="mac"][data-fullscreen="true"] .tb-left {
+  padding-left: 8px;
+}
+
 /* ============================ 本体（サイドバー + メイン） ============================ */
 #body {
   flex: 1 1 auto;

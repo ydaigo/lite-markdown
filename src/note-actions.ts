@@ -1,10 +1,12 @@
 import { openPath } from "@tauri-apps/plugin-opener";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { LogicalPosition } from "@tauri-apps/api/dpi";
 import { state } from "./store";
 import { flushSave } from "./autosave";
+import { isMac } from "./app-window";
 import { withErrorNotice, showErrorFor, showToast } from "./errors";
-import { NOTE_WINDOW } from "./constants";
+import { NOTE_WINDOW, MAC_TRAFFIC_LIGHT } from "./constants";
 import { t } from "./i18n";
 
 // ============================================================================
@@ -34,6 +36,19 @@ function windowLabel(path: string): string {
   return `note-${h.toString(36)}`;
 }
 
+// ウィンドウ装飾の指定。macOS はネイティブのウィンドウボタン（信号機）を出し、
+// それ以外は装飾なし（自作タイトルバーのボタンで操作する）。
+// メインウィンドウ側の同じ指定は src-tauri/tauri.macos.conf.json にある。
+const decorationOptions = () =>
+  isMac
+    ? {
+        decorations: true,
+        titleBarStyle: "overlay" as const,
+        hiddenTitle: true,
+        trafficLightPosition: new LogicalPosition(MAC_TRAFFIC_LIGHT.x, MAC_TRAFFIC_LIGHT.y),
+      }
+    : { decorations: false };
+
 // メモを別ウィンドウで開く。既に開いていれば、そのウィンドウを前面に出す。
 export async function openInNewWindow(path: string): Promise<void> {
   await withErrorNotice(t("newWindowFailed"), async () => {
@@ -50,7 +65,7 @@ export async function openInNewWindow(path: string): Promise<void> {
       url: `index.html?note=${encodeURIComponent(path)}`,
       title: t("appName"),
       ...NOTE_WINDOW,
-      decorations: false,
+      ...decorationOptions(),
       visible: false,
     });
     // 生成はここから非同期に進むので、失敗はイベントで受け取る。

@@ -6,7 +6,7 @@ import { applyLanguage } from "./localize";
 import { isAutoUpdateEnabled } from "./prefs";
 import { initWorkspace } from "./workspace";
 import { startSync } from "./sync";
-import { revealWindow, isMainWindow } from "./app-window";
+import { revealWindow, isMainWindow, applyPlatform } from "./app-window";
 import { prefetchRenderer } from "./preview";
 import { UPDATE_CHECK_DELAY_MS, REVEAL_DEADLINE_MS } from "./constants";
 
@@ -18,6 +18,7 @@ registerGlobalErrorHandlers();
 // 保存済み設定の読み書きは prefs.ts に閉じており、テーマと言語は読み込み時点で
 // 解決済み（store.ts / i18n.ts）。ここは画面へ反映する順序だけを決める。
 async function init(): Promise<void> {
+  applyPlatform();
   applyTheme();
   applyLanguage();
   // ワークスペースの監視は setWorkspace が張るので、ここでは復帰時の確認だけ足す。

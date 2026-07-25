@@ -37,5 +37,15 @@ export const NOTE_WINDOW = {
   minHeight: 360,
 } as const;
 
+// macOS のネイティブなウィンドウボタン（赤・黄・緑の信号機）の位置。
+// メインウィンドウの指定は src-tauri/tauri.macos.conf.json にあり、別ウィンドウには
+// note-actions.ts から同じ値を渡す（JSON とは値を共有できないので、変えるときは両方）。
+// styles.css で空ける左余白もこの x に合わせている。
+export const MAC_TRAFFIC_LIGHT = { x: 14, y: 14 } as const;
+
+// フルスクリーンの出入りを確かめるまでの待ち時間(ms)。
+// リサイズは連続で届くため、落ち着いてから 1 回だけ Rust に問い合わせる。
+export const FULLSCREEN_SYNC_DEBOUNCE_MS = 120;
+
 // UI 文言は言語ごとに切り替わるため messages.ts に置く（t() 経由で取得）。
 // localStorage のキーは prefs.ts に置く（読み書きも同モジュールに閉じる）。
