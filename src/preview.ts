@@ -1,5 +1,3 @@
-import { marked } from "marked";
-import DOMPurify from "dompurify";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { previewEl } from "./dom";
 import { state } from "./store";
@@ -9,8 +7,26 @@ import { t } from "./i18n";
 // ============================================================================
 // プレビュー（Markdown → HTML）
 // ============================================================================
-// Qiita 方式: 単一の改行も <br> として維持する。
-marked.setOptions({ gfm: true, breaks: true });
+// marked / DOMPurify は起動時には要らないので、バンドルを分けて遅延読み込みする。
+// 初回プレビューで待たせないよう、起動が落ち着いた時点で先読みする。
+type Renderer = (text: string) => string;
+
+let renderer: Renderer | null = null;
+let loading: Promise<Renderer> | null = null;
+
+function loadRenderer(): Promise<Renderer> {
+  loading ??= Promise.all([import("marked"), import("dompurify")]).then(
+    ([{ marked }, { default: DOMPurify }]) => {
+      // Qiita 方式: 単一の改行も <br> として維持する。
+      marked.setOptions({ gfm: true, breaks: true });
+      renderer = (text) => DOMPurify.sanitize(marked.parse(text, { async: false }) as string);
+      return renderer;
+    },
+  );
+  return loading;
+}
+
+export const prefetchRenderer = (): void => void loadRenderer();
 
 export function renderPreview(): void {
   const text = getDoc();
@@ -19,8 +35,12 @@ export function renderPreview(): void {
     previewEl.innerHTML = `<p class="preview-empty">${t("emptyNote")}</p>`;
     return;
   }
-  const html = marked.parse(text, { async: false }) as string;
-  previewEl.innerHTML = DOMPurify.sanitize(html);
+  if (!renderer) {
+    // 未読み込みなら、読み込めた時点で最新の本文を描き直す。
+    void loadRenderer().then(() => renderPreview());
+    return;
+  }
+  previewEl.innerHTML = renderer(text);
   resolveLocalImages();
 }
 

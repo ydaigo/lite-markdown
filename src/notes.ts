@@ -1,5 +1,4 @@
 import { readDir, readTextFile, writeTextFile, remove } from "@tauri-apps/plugin-fs";
-import { join } from "@tauri-apps/api/path";
 import { ask } from "@tauri-apps/plugin-dialog";
 import type { NoteMeta } from "./store";
 import { state, notify } from "./store";
@@ -11,6 +10,7 @@ import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
 import { readJSON, writeJSON } from "./storage";
 import { withErrorNotice } from "./errors";
+import { joinPath } from "./utils";
 import { LS, SAVE_DEBOUNCE_MS } from "./constants";
 import { t } from "./i18n";
 
@@ -83,23 +83,28 @@ export async function commitCurrent(): Promise<void> {
 // ============================================================================
 // メモ操作
 // ============================================================================
+// 1 件分のメタを読み取る。読めないファイルは null（一覧から外す）。
+async function readNoteMeta(path: string): Promise<NoteMeta | null> {
+  let text: string;
+  try {
+    text = await readTextFile(path);
+  } catch {
+    return null;
+  }
+  const mtime = await statMtime(path);
+  return { path, ...deriveMeta(text), mtime, hay: text.toLowerCase() };
+}
+
 export async function refreshNotes(): Promise<void> {
   const entries = await readDir(state.workspace);
   const mdNames = entries.filter((e) => e.isFile && /\.md$/i.test(e.name)).map((e) => e.name);
-  const metas: NoteMeta[] = [];
-  for (const name of mdNames) {
-    const path = await join(state.workspace, name);
-    let text: string;
-    try {
-      text = await readTextFile(path);
-    } catch {
-      continue;
-    }
-    const mtime = await statMtime(path);
-    metas.push({ path, ...deriveMeta(text), mtime, hay: text.toLowerCase() });
-  }
-  sortByMtimeDesc(metas);
-  state.notes = metas;
+  // メモごとの読み取りは互いに独立なので並行に走らせる（起動時間に直結する）。
+  const metas = await Promise.all(
+    mdNames.map((name) => readNoteMeta(joinPath(state.workspace, name))),
+  );
+  const list = metas.filter((m): m is NoteMeta => m !== null);
+  sortByMtimeDesc(list);
+  state.notes = list;
 }
 
 export async function selectNote(path: string): Promise<void> {
@@ -132,7 +137,7 @@ export async function newNote(): Promise<void> {
     return;
   }
   await commitCurrent();
-  const path = await join(state.workspace, `note-${Date.now()}.md`);
+  const path = joinPath(state.workspace, `note-${Date.now()}.md`);
   await writeTextFile(path, "");
   state.notes.unshift({ path, title: t("newNote"), snippet: "", mtime: Date.now(), hay: "" });
   state.currentPath = path;
