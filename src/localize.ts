@@ -1,9 +1,22 @@
-import { $, btnToggle, emptyEl, searchInputEl } from "./dom";
-import { state } from "./store";
-import { t, getLang } from "./i18n";
+import {
+  btnNew,
+  btnNewLabel,
+  btnSearch,
+  btnSettings,
+  btnSidebar,
+  btnTheme,
+  btnToggle,
+  emptyEl,
+  searchInputEl,
+  winClose,
+  winMax,
+  winMin,
+  wsBtn,
+} from "./dom";
+import { t, getLang, type MsgKey } from "./i18n";
 import { applyEditorLang } from "./editor";
 import { renderList, updateWsName } from "./sidebar";
-import { updateTitle } from "./view-modes";
+import { updateModeLabel, updateTitle } from "./view-modes";
 
 // ============================================================================
 // 表示言語を DOM 全体へ反映する
@@ -11,29 +24,32 @@ import { updateTitle } from "./view-modes";
 // index.html に直接書かれた静的ラベル（title 属性など）は起動時の既定値でしかない。
 // 起動時と言語切替時にここでまとめて上書きする。
 function applyStaticText(): void {
-  $<HTMLButtonElement>("btn-sidebar").title = t("tipSidebar");
-  $<HTMLButtonElement>("btn-search").title = t("tipSearch");
-  $<HTMLButtonElement>("btn-settings").title = `${t("tipSettings")} (?)`;
-  $<HTMLButtonElement>("btn-theme").title = t("tipTheme");
-  $<HTMLButtonElement>("ws-btn").title = t("tipWorkspace");
-  $<HTMLButtonElement>("btn-new").title = t("tipNewNote");
-  $<HTMLSpanElement>("btn-new-label").textContent = t("newNote");
-  searchInputEl.placeholder = t("searchPlaceholder");
+  // title だけを持つボタン。
+  const tips: [HTMLElement, MsgKey][] = [
+    [btnSidebar, "tipSidebar"],
+    [btnSearch, "tipSearch"],
+    [btnTheme, "tipTheme"],
+    [btnToggle, "tipToggleMode"],
+    [wsBtn, "tipWorkspace"],
+    [btnNew, "tipNewNote"],
+  ];
+  for (const [el, key] of tips) el.title = t(key);
+  btnSettings.title = `${t("tipSettings")} (?)`;
 
-  for (const [id, key] of [
-    ["win-min", "tipMinimize"],
-    ["win-max", "tipMaximize"],
-    ["win-close", "tipClose"],
-  ] as const) {
-    const b = $<HTMLButtonElement>(id);
-    b.title = t(key);
-    b.setAttribute("aria-label", t(key));
+  // ウィンドウ操作はアイコンのみなので読み上げ用の名前も要る。
+  const labeled: [HTMLElement, MsgKey][] = [
+    [winMin, "tipMinimize"],
+    [winMax, "tipMaximize"],
+    [winClose, "tipClose"],
+  ];
+  for (const [el, key] of labeled) {
+    el.title = t(key);
+    el.setAttribute("aria-label", t(key));
   }
 
-  // モード切替ボタンは「切り替えた先」を表示する。
-  btnToggle.title = t("tipToggleMode");
-  btnToggle.textContent = state.mode === "preview" ? t("editLabel") : t("previewLabel");
-
+  btnNewLabel.textContent = t("newNote");
+  searchInputEl.placeholder = t("searchPlaceholder");
+  updateModeLabel();
   emptyEl.replaceChildren(t("emptyStateTitle"), document.createElement("br"), t("emptyStateHint"));
 }
 

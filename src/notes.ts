@@ -6,7 +6,7 @@ import { state, notify } from "./store";
 import { editorEl, emptyEl } from "./dom";
 import { getDoc, setDoc, focusEditor } from "./editor";
 import { renderPreview } from "./preview";
-import { setMode, updateTitle } from "./view-modes";
+import { setMode, showEmptyState, updateTitle } from "./view-modes";
 import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
 import { readJSON, writeJSON } from "./storage";
@@ -157,9 +157,7 @@ export async function deleteNote(path: string): Promise<void> {
     if (state.notes.length) {
       await selectNote(state.notes[0].path);
     } else {
-      setDoc("");
-      editorEl.hidden = true;
-      emptyEl.hidden = false;
+      showEmptyState();
       void updateTitle();
     }
   }

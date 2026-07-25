@@ -1,7 +1,16 @@
 import { state, notify } from "./store";
-import { editorEl, previewEl, btnToggle, btnTheme, appEl, searchBarEl, searchInputEl } from "./dom";
+import {
+  editorEl,
+  emptyEl,
+  previewEl,
+  btnToggle,
+  btnTheme,
+  appEl,
+  searchBarEl,
+  searchInputEl,
+} from "./dom";
 import { appWindow } from "./app-window";
-import { focusEditor, applyEditorTheme } from "./editor";
+import { focusEditor, applyEditorTheme, setDoc } from "./editor";
 import { renderPreview } from "./preview";
 import { LS } from "./constants";
 import { t } from "./i18n";
@@ -15,16 +24,27 @@ export function setMode(next: "edit" | "preview"): void {
     renderPreview();
     editorEl.hidden = true;
     previewEl.hidden = false;
-    btnToggle.textContent = t("editLabel");
   } else {
     previewEl.hidden = true;
     editorEl.hidden = state.currentPath === null;
-    btnToggle.textContent = t("previewLabel");
     if (state.currentPath !== null) focusEditor();
   }
+  updateModeLabel();
 }
 
 export const toggleMode = (): void => setMode(state.mode === "edit" ? "preview" : "edit");
+
+// 切替ボタンには「切り替えた先」を表示する。言語切替後の貼り直しにも使う。
+export function updateModeLabel(): void {
+  btnToggle.textContent = state.mode === "preview" ? t("editLabel") : t("previewLabel");
+}
+
+// メモが無い / 開けないときの表示に切り替える。
+export function showEmptyState(): void {
+  setDoc("");
+  editorEl.hidden = true;
+  emptyEl.hidden = false;
+}
 
 // ============================================================================
 // テーマ
@@ -33,6 +53,13 @@ export function applyTheme(): void {
   document.documentElement.setAttribute("data-theme", state.theme);
   btnTheme.textContent = state.theme === "dark" ? "☀️" : "🌙";
   applyEditorTheme();
+}
+
+// 保存済みのテーマを復元して適用する。未保存なら OS の設定に従う（store の既定値）。
+export function initTheme(): void {
+  const saved = localStorage.getItem(LS.theme);
+  if (saved === "light" || saved === "dark") state.theme = saved;
+  applyTheme();
 }
 
 export function toggleTheme(): void {

@@ -1,14 +1,15 @@
 import { open } from "@tauri-apps/plugin-dialog";
+import { homeDir, join } from "@tauri-apps/api/path";
 import { state, notify } from "./store";
-import { setDoc } from "./editor";
-import { editorEl, emptyEl, wsMenuEl } from "./dom";
+import { wsMenuEl } from "./dom";
 import { refreshNotes, selectNote, newNote, commitCurrent } from "./notes";
+import { showEmptyState } from "./view-modes";
 import { updateWsName } from "./sidebar";
 import { readJSON, writeJSON } from "./storage";
 import { mkdirSafe } from "./fs-utils";
-import { showError } from "./errors";
+import { showErrorFor } from "./errors";
 import { baseName } from "./utils";
-import { LS } from "./constants";
+import { LS, DEFAULT_WORKSPACE_DIR } from "./constants";
 import { t } from "./i18n";
 
 // ============================================================================
@@ -36,11 +37,9 @@ export async function setWorkspace(path: string): Promise<void> {
   } catch (e) {
     // ホームフォルダ外など、読み取れないフォルダを選んだ場合の保護。
     state.notes = [];
-    setDoc("");
-    editorEl.hidden = true;
-    emptyEl.hidden = false;
+    showEmptyState();
     notify();
-    showError(`${t("cannotOpenFolder")}: ${String(e)}`);
+    showErrorFor(t("cannotOpenFolder"), e);
     return;
   }
 
@@ -53,6 +52,17 @@ export async function setWorkspace(path: string): Promise<void> {
     await newNote();
   }
   notify();
+}
+
+// 起動時の復元: 前回のワークスペース、無ければホーム直下の既定フォルダを開く。
+export async function initWorkspace(): Promise<void> {
+  state.workspaces = readJSON<string[]>(LS.workspaces, []);
+  const current = localStorage.getItem(LS.current);
+  if (current) {
+    await setWorkspace(current);
+    return;
+  }
+  await setWorkspace(await join(await homeDir(), DEFAULT_WORKSPACE_DIR));
 }
 
 export async function chooseWorkspaceFolder(): Promise<void> {

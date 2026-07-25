@@ -2,27 +2,33 @@
 // エラー表示と共通ハンドリング
 // ============================================================================
 
+// 通知用の要素は常時は要らないので、初回に作って以後は使い回す。
+function notifyEl(id: string): HTMLElement {
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement("div");
+    el.id = id;
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
 // 予期しないエラーを画面上のバーに可視化（白画面化を防ぐ）。
 export function showError(msg: string): void {
-  let bar = document.getElementById("error-bar");
-  if (!bar) {
-    bar = document.createElement("div");
-    bar.id = "error-bar";
-    document.body.appendChild(bar);
-  }
+  const bar = notifyEl("error-bar");
   bar.textContent = "⚠ " + msg;
   bar.hidden = false;
+}
+
+// 「文言: 原因」の形に揃えてエラーバーへ出す。
+export function showErrorFor(message: string, e: unknown): void {
+  showError(`${message}: ${String(e)}`);
 }
 
 // 成功などの軽い一時通知（数秒で自動的に消える）。エラーバーとは別枠。
 let toastTimer: number | undefined;
 export function showToast(msg: string): void {
-  let el = document.getElementById("toast");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "toast";
-    document.body.appendChild(el);
-  }
+  const el = notifyEl("toast");
   el.textContent = msg;
   el.hidden = false;
   clearTimeout(toastTimer);
@@ -48,7 +54,7 @@ export async function withErrorNotice(
     await fn();
     return true;
   } catch (e) {
-    showError(`${message}: ${String(e)}`);
+    showErrorFor(message, e);
     return false;
   }
 }

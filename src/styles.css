@@ -666,7 +666,7 @@ body {
 }
 
 /* ============================ 設定ダイアログ ============================ */
-#sc-overlay {
+#set-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -675,7 +675,7 @@ body {
   justify-content: center;
   background: rgba(0, 0, 0, 0.4);
 }
-.sc-dialog {
+.set-dialog {
   width: min(420px, 90vw);
   max-height: 80vh;
   overflow: auto;
@@ -686,17 +686,17 @@ body {
   box-shadow: 0 12px 40px var(--menu-shadow);
   padding: 16px 18px;
 }
-.sc-head {
+.set-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
-.sc-title {
+.set-title {
   font-size: 14px;
   font-weight: 700;
 }
-.sc-close {
+.set-close {
   border: none;
   background: transparent;
   color: var(--muted);
@@ -705,10 +705,10 @@ body {
   padding: 2px 6px;
   border-radius: 6px;
 }
-.sc-close:hover {
+.set-close:hover {
   background: var(--item-hover);
 }
-.sc-row {
+.set-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -716,22 +716,22 @@ body {
   padding: 7px 0;
   font-size: 13px;
 }
-.sc-row + .sc-row {
+.set-row + .set-row {
   border-top: 1px solid var(--border);
 }
-.sc-desc {
+.set-desc {
   flex: 1;
 }
-.sc-keys {
+.set-keys {
   flex: 0 0 auto;
   font-family: "SFMono-Regular", Consolas, Menlo, monospace;
   font-size: 12px;
   color: var(--muted);
 }
-.sc-section + .sc-section {
+.set-section + .set-section {
   margin-top: 18px;
 }
-.sc-section-title {
+.set-section-title {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -741,20 +741,20 @@ body {
   border-bottom: 1px solid var(--border);
 }
 /* セクション内の先頭行は見出しの下線と重ならないようにする。 */
-.sc-section-title + .sc-row {
+.set-section-title + .set-row {
   border-top: none;
 }
-.sc-note {
+.set-note {
   font-size: 11px;
   color: var(--muted);
   padding-bottom: 4px;
 }
-.sc-value {
+.set-value {
   flex: 0 0 auto;
   font-size: 12px;
   color: var(--muted);
 }
-.sc-select {
+.set-select {
   flex: 0 0 auto;
   font: inherit;
   font-size: 13px;
@@ -765,14 +765,14 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
-.sc-check {
+.set-check {
   flex: 0 0 auto;
   width: 15px;
   height: 15px;
   accent-color: #3b82f6;
   cursor: pointer;
 }
-.sc-check:disabled {
+.set-check:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }

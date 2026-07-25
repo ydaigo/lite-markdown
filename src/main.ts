@@ -1,34 +1,23 @@
 import "./styles.css";
 import "./events"; // 副作用: DOM イベントの配線と購読の登録
-import { homeDir, join } from "@tauri-apps/api/path";
-import { state } from "./store";
 import { registerGlobalErrorHandlers } from "./errors";
-import { applyTheme } from "./view-modes";
+import { initTheme } from "./view-modes";
 import { applyLanguage } from "./localize";
 import { isAutoUpdateEnabled } from "./settings";
-import { setWorkspace } from "./workspace";
-import { readJSON } from "./storage";
-import { LS, DEFAULT_WORKSPACE_DIR, UPDATE_CHECK_DELAY_MS } from "./constants";
+import { initWorkspace } from "./workspace";
+import { UPDATE_CHECK_DELAY_MS } from "./constants";
 
 registerGlobalErrorHandlers();
 
 // ============================================================================
 // 初期化
 // ============================================================================
+// 保存済み設定の読み出しは各モジュールが持つ（テーマ=view-modes、言語=i18n、
+// 自動更新=settings、ワークスペース=workspace）。ここは順序だけを決める。
 async function init(): Promise<void> {
-  const savedTheme = localStorage.getItem(LS.theme);
-  if (savedTheme === "light" || savedTheme === "dark") state.theme = savedTheme;
-  applyTheme();
+  initTheme();
   applyLanguage();
-
-  state.workspaces = readJSON<string[]>(LS.workspaces, []);
-  const current = localStorage.getItem(LS.current);
-  if (current) {
-    await setWorkspace(current);
-  } else {
-    const def = await join(await homeDir(), DEFAULT_WORKSPACE_DIR);
-    await setWorkspace(def);
-  }
+  await initWorkspace();
 }
 
 void init();

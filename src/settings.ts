@@ -42,9 +42,9 @@ export function closeSettings(): void {
 // 見出し付きのセクションを作る。
 function section(titleText: string, ...children: Node[]): HTMLDivElement {
   const sec = document.createElement("div");
-  sec.className = "sc-section";
+  sec.className = "set-section";
   const head = document.createElement("div");
-  head.className = "sc-section-title";
+  head.className = "set-section-title";
   head.textContent = titleText;
   sec.append(head, ...children);
   return sec;
@@ -53,9 +53,9 @@ function section(titleText: string, ...children: Node[]): HTMLDivElement {
 // 「説明 + 操作部」の 1 行を作る。
 function row(labelText: string, control?: Node): HTMLDivElement {
   const r = document.createElement("div");
-  r.className = "sc-row";
+  r.className = "set-row";
   const desc = document.createElement("span");
-  desc.className = "sc-desc";
+  desc.className = "set-desc";
   desc.textContent = labelText;
   r.append(desc);
   if (control) r.append(control);
@@ -64,7 +64,7 @@ function row(labelText: string, control?: Node): HTMLDivElement {
 
 function languageSection(): HTMLDivElement {
   const select = document.createElement("select");
-  select.className = "sc-select";
+  select.className = "set-select";
   for (const l of LANGS) {
     const opt = document.createElement("option");
     opt.value = l.value;
@@ -83,7 +83,7 @@ function languageSection(): HTMLDivElement {
 function updateSection(): HTMLDivElement {
   const check = document.createElement("input");
   check.type = "checkbox";
-  check.className = "sc-check";
+  check.className = "set-check";
   check.checked = UPDATER_BUILD && isAutoUpdateEnabled();
   // 更新機能を含まないビルドでは操作しても意味がないので触らせない。
   check.disabled = !UPDATER_BUILD;
@@ -92,7 +92,7 @@ function updateSection(): HTMLDivElement {
   const rows = [row(t("autoUpdateLabel"), check)];
   if (appVersion) {
     const value = document.createElement("span");
-    value.className = "sc-value";
+    value.className = "set-value";
     value.textContent = `v${appVersion}`;
     rows.unshift(row(t("versionLabel"), value));
   }
@@ -100,7 +100,7 @@ function updateSection(): HTMLDivElement {
   const sec = section(t("sectionUpdate"), ...rows);
   if (!UPDATER_BUILD) {
     const note = document.createElement("div");
-    note.className = "sc-note";
+    note.className = "set-note";
     note.textContent = t("autoUpdateUnavailable");
     sec.append(note);
   }
@@ -110,7 +110,7 @@ function updateSection(): HTMLDivElement {
 function shortcutsSection(): HTMLDivElement {
   const rows = SHORTCUTS.map((s) => {
     const keys = document.createElement("span");
-    keys.className = "sc-keys";
+    keys.className = "set-keys";
     keys.textContent = s.keys;
     return row(t(s.descKey), keys);
   });
@@ -121,15 +121,15 @@ function shortcutsSection(): HTMLDivElement {
 function render(): void {
   if (!overlay) return;
   const dialog = document.createElement("div");
-  dialog.className = "sc-dialog";
+  dialog.className = "set-dialog";
 
   const head = document.createElement("div");
-  head.className = "sc-head";
+  head.className = "set-head";
   const title = document.createElement("div");
-  title.className = "sc-title";
+  title.className = "set-title";
   title.textContent = t("settingsTitle");
   const close = document.createElement("button");
-  close.className = "sc-close";
+  close.className = "set-close";
   close.textContent = "✕";
   close.title = t("tipClose");
   close.setAttribute("aria-label", t("tipClose"));
@@ -143,7 +143,7 @@ function render(): void {
 export function openSettings(): void {
   if (overlay) return;
   const ov = document.createElement("div");
-  ov.id = "sc-overlay";
+  ov.id = "set-overlay";
   // 背景（オーバーレイ自身）クリックで閉じる。
   ov.addEventListener("click", (e) => {
     if (e.target === ov) closeSettings();

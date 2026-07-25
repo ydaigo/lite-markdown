@@ -1,5 +1,19 @@
 import { appWindow } from "./app-window";
-import { $, btnToggle, btnTheme, appEl, searchInputEl } from "./dom";
+import {
+  appEl,
+  btnNew,
+  btnSearch,
+  btnSettings,
+  btnSidebar,
+  btnTheme,
+  btnToggle,
+  searchInputEl,
+  titlebarEl,
+  winClose,
+  winMax,
+  winMin,
+  wsBtn,
+} from "./dom";
 import { state, notify } from "./store";
 import { newNote, flushSave, scheduleSave } from "./notes";
 import { toggleMode, toggleTheme, toggleSearch } from "./view-modes";
@@ -22,16 +36,14 @@ import { closeContextMenu } from "./context-menu";
 setDocChangeHandler(scheduleSave);
 setImagePasteHandler(insertPastedImage);
 
-$<HTMLButtonElement>("btn-new").addEventListener("click", () => void newNote());
-$<HTMLButtonElement>("ws-btn").addEventListener("click", (e) => {
+btnNew.addEventListener("click", () => void newNote());
+wsBtn.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleWsMenu();
 });
-$<HTMLButtonElement>("btn-sidebar").addEventListener("click", () =>
-  appEl.classList.toggle("sidebar-hidden"),
-);
-$<HTMLButtonElement>("btn-search").addEventListener("click", () => toggleSearch());
-$<HTMLButtonElement>("btn-settings").addEventListener("click", () => {
+btnSidebar.addEventListener("click", () => appEl.classList.toggle("sidebar-hidden"));
+btnSearch.addEventListener("click", () => toggleSearch());
+btnSettings.addEventListener("click", () => {
   closeContextMenu();
   toggleSettings();
 });
@@ -39,12 +51,12 @@ btnToggle.addEventListener("click", () => toggleMode());
 btnTheme.addEventListener("click", () => toggleTheme());
 
 // ウィンドウ操作（自作タイトルバー）
-$<HTMLButtonElement>("win-min").addEventListener("click", () => void appWindow.minimize());
-$<HTMLButtonElement>("win-max").addEventListener("click", () => void appWindow.toggleMaximize());
-$<HTMLButtonElement>("win-close").addEventListener("click", () => void appWindow.close());
+winMin.addEventListener("click", () => void appWindow.minimize());
+winMax.addEventListener("click", () => void appWindow.toggleMaximize());
+winClose.addEventListener("click", () => void appWindow.close());
 
 // タイトルバーの空き領域をダブルクリックで最大化トグル
-$<HTMLElement>("titlebar").addEventListener("dblclick", (e) => {
+titlebarEl.addEventListener("dblclick", (e) => {
   const t = e.target as HTMLElement;
   if (t.closest("button")) return; // ボタン上は無視
   void appWindow.toggleMaximize();
@@ -100,12 +112,13 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// 入力欄やエディタ（contenteditable）にフォーカスがあるかを判定する。
+// 入力欄やエディタ（contenteditable）、設定ダイアログの選択欄に
+// フォーカスがあるかを判定する。
 function isTypingTarget(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
   if (!el) return false;
   if (el.isContentEditable) return true;
-  return el.tagName === "INPUT" || el.tagName === "TEXTAREA";
+  return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT";
 }
 
 // フォーカスが外れたら保存（安全策）
