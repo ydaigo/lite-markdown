@@ -21,8 +21,10 @@ export function revealWindow(): void {
         try {
           await appWindow.show();
           await appWindow.setFocus();
-        } catch {
-          /* 既に閉じられている場合などは無視 */
+        } catch (e) {
+          // 表示できなくても Rust 側の保険で出るため、画面には出さず記録だけ残す
+          // （権限不足で黙って落ちると、保険が効く数秒間ウィンドウが出ない）。
+          console.error("show() に失敗しました", e);
         }
       })();
     });
