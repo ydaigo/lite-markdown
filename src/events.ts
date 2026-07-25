@@ -18,7 +18,12 @@ import { state, notify } from "./store";
 import { newNote, flushSave, scheduleSave } from "./notes";
 import { setMode, toggleMode, toggleTheme, toggleSearch } from "./view-modes";
 import { toggleWsMenu } from "./workspace";
-import { setDocChangeHandler, setImagePasteHandler, openEditorSearch } from "./editor";
+import {
+  setDocChangeHandler,
+  setImagePasteHandler,
+  openEditorSearch,
+  openEditorReplace,
+} from "./editor";
 import { insertPastedImage } from "./images";
 import { toggleSettings, closeSettings, settingsOpen } from "./settings";
 import { closeContextMenu } from "./context-menu";
@@ -103,20 +108,20 @@ window.addEventListener("keydown", (e) => {
       return;
     }
     // メモを開いていればエディタ内検索、開いていなければ一覧の絞り込み。
-    if (!openFindInEditor()) toggleSearch(true);
+    if (!openFindInEditor(false)) toggleSearch(true);
   } else if (key === "h") {
-    // エディタ内 置換パネル（検索パネルと共通）。
     e.preventDefault();
-    openFindInEditor();
+    openFindInEditor(true);
   }
 });
 
-// エディタ内の検索/置換パネルを開く。プレビュー中は編集モードへ戻す。
-// メモを開いていないときは何もせず false を返す。
-function openFindInEditor(): boolean {
+// エディタ内の検索パネルを開く。withReplace で置換の行を出すか決める。
+// プレビュー中は編集モードへ戻す。メモを開いていないときは何もせず false を返す。
+function openFindInEditor(withReplace: boolean): boolean {
   if (!state.currentPath) return false;
   if (state.mode === "preview") setMode("edit");
-  openEditorSearch();
+  if (withReplace) openEditorReplace();
+  else openEditorSearch();
   return true;
 }
 

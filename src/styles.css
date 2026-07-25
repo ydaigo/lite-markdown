@@ -633,6 +633,13 @@ body {
   color: var(--fg);
   font-size: 12px;
 }
+/* 検索のみで開いたとき、置換の行（br + 入力欄 + 2 つのボタン）を隠す。 */
+#editor.hide-replace .cm-panel.cm-search br,
+#editor.hide-replace .cm-panel.cm-search input[name="replace"],
+#editor.hide-replace .cm-panel.cm-search button[name="replace"],
+#editor.hide-replace .cm-panel.cm-search button[name="replaceAll"] {
+  display: none;
+}
 
 /* ============================ コンテキストメニュー ============================ */
 .ctx-menu {

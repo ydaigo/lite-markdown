@@ -161,7 +161,15 @@ export function applyEditorLang(): void {
   view.dispatch({ effects: langCompartment.reconfigure(langExtensions()) });
 }
 
-// 検索・置換パネルを開く（CodeMirror 側が検索欄にフォーカスを入れる）。
-export function openEditorSearch(): void {
+// CodeMirror のパネルは検索と置換が一体なので、置換の行だけ CSS で出し入れして
+// 「検索」と「検索/置換」を作り分ける。フォーカスは CodeMirror が検索欄へ入れる。
+function openPanel(withReplace: boolean): void {
+  editorEl.classList.toggle("hide-replace", !withReplace);
   openSearchPanel(view);
 }
+
+// 検索パネルを開く（置換の行は隠す）。
+export const openEditorSearch = (): void => openPanel(false);
+
+// 検索/置換パネルを開く。
+export const openEditorReplace = (): void => openPanel(true);
