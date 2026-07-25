@@ -9,9 +9,17 @@ import { setMode, showEmptyState, updateTitle } from "./view-modes";
 import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
 import { writeLastNote } from "./prefs";
+import { unpin, topNote } from "./pins";
 import { withErrorNotice } from "./errors";
 import { isMarkdownPath, joinPath } from "./utils";
 import { t } from "./i18n";
+
+// 一覧から取り除くときはピンも一緒に落とす（消えたメモの記録を残さない）。
+// store の removeNote から呼ばないのは、pins が store を参照していて循環するため。
+const forgetNote = (path: string): void => {
+  removeNote(path);
+  unpin(path);
+};
 
 // ============================================================================
 // メモ一覧の読み込み
@@ -97,7 +105,7 @@ export async function commitCurrent(): Promise<void> {
   } catch {
     /* すでに無い場合は無視 */
   }
-  removeNote(path);
+  forgetNote(path);
   state.currentPath = null;
 }
 
@@ -134,11 +142,13 @@ export async function deleteNote(path: string): Promise<void> {
   if (!ok) return;
   // 削除に失敗したら通知するが、一覧からは取り除く（多くは「既に無い」ため）。
   await withErrorNotice(t("deleteFailed"), () => remove(path));
-  removeNote(path);
+  forgetNote(path);
   if (state.currentPath === path) {
     state.currentPath = null;
-    if (state.notes.length) {
-      await selectNote(state.notes[0].path);
+    // 次に開くのは表示順の先頭（ピンがあればそれ）。
+    const next = topNote(state.notes);
+    if (next) {
+      await selectNote(next.path);
     } else {
       showEmptyState();
       void updateTitle();

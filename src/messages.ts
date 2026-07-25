@@ -23,6 +23,8 @@ const ja = {
   noExtraText: "追加テキストなし",
   emptyNote: "（このメモは空です）",
   noSearchResult: "該当するメモがありません",
+  sectionPinned: "ピン留め",
+  sectionRecent: "最近のメモ",
   noWorkspace: "（未選択）",
   chooseFolder: "📁 フォルダを選択…",
   chooseWorkspaceTitle: "ワークスペースにするフォルダを選択",
@@ -54,6 +56,8 @@ const ja = {
 
   // 操作メニュー（メモ / ワークスペース）
   menuMore: "操作",
+  menuPin: "ピン留め",
+  menuUnpin: "ピン留めを解除",
   menuOpenInNewWindow: "新規ウィンドウで開く",
   menuCopyPath: "パスをコピー",
   menuOpenFolder: "ディレクトリを開く",
@@ -103,6 +107,8 @@ const en: Record<MsgKey, string> = {
   noExtraText: "No additional text",
   emptyNote: "(This note is empty)",
   noSearchResult: "No matching notes",
+  sectionPinned: "Pinned",
+  sectionRecent: "Recent",
   noWorkspace: "(none)",
   chooseFolder: "📁 Choose folder…",
   chooseWorkspaceTitle: "Choose a folder to use as the workspace",
@@ -131,6 +137,8 @@ const en: Record<MsgKey, string> = {
   updateFailed: "Failed to update",
 
   menuMore: "Actions",
+  menuPin: "Pin",
+  menuUnpin: "Unpin",
   menuOpenInNewWindow: "Open in new window",
   menuCopyPath: "Copy path",
   menuOpenFolder: "Open folder",

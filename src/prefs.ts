@@ -14,6 +14,7 @@ const KEY = {
   lang: "lm.lang",
   autoUpdate: "lm.autoUpdate",
   lastNote: "lm.lastNote",
+  pinned: "lm.pinned",
 } as const;
 
 // ============================================================================
@@ -58,4 +59,24 @@ export function writeLastNote(workspace: string, notePath: string): void {
   const map = readJSON<LastNoteMap>(KEY.lastNote, {});
   map[workspace] = notePath;
   writeJSON(KEY.lastNote, map);
+}
+
+// ============================================================================
+// ピン留めしたメモ（ワークスペースごと）
+// ============================================================================
+type PinMap = Record<string, string[]>;
+
+// 別ウィンドウでの変更を storage イベントで拾う側が、対象のキーか判定するのに使う。
+// 値の読み書きはこのモジュールに閉じたまま、キー名だけを渡す。
+export const PINNED_KEY: string = KEY.pinned;
+
+export const readPins = (workspace: string): string[] =>
+  readJSON<PinMap>(KEY.pinned, {})[workspace] ?? [];
+
+// ピンが無くなったワークスペースはキーごと落とす（空配列を残さない）。
+export function writePins(workspace: string, paths: string[]): void {
+  const map = readJSON<PinMap>(KEY.pinned, {});
+  if (paths.length) map[workspace] = paths;
+  else delete map[workspace];
+  writeJSON(KEY.pinned, map);
 }

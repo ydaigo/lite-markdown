@@ -6,6 +6,7 @@ import { t, localeOf } from "./i18n";
 import { selectNote, deleteNote } from "./notes";
 import { openContextMenu, openMenuUnder, type MenuItem } from "./context-menu";
 import { copyPath, openInNewWindow } from "./note-actions";
+import { isPinned, togglePin, splitByPin } from "./pins";
 
 // ============================================================================
 // サイドバー描画
@@ -16,6 +17,7 @@ import { copyPath, openInNewWindow } from "./note-actions";
 // サイドバー上部の ⋯ から開く（workspace.ts）。
 function noteMenuItems(path: string): MenuItem[] {
   return [
+    { label: isPinned(path) ? t("menuUnpin") : t("menuPin"), action: () => togglePin(path) },
     { label: t("menuOpenInNewWindow"), action: () => void openInNewWindow(path) },
     { label: t("menuCopyPath"), action: () => void copyPath(path) },
     { label: t("menuDelete"), danger: true, action: () => void deleteNote(path) },
@@ -24,9 +26,14 @@ function noteMenuItems(path: string): MenuItem[] {
 
 // メモ 1 件の行。パスは dataset に持たせ、クリックは一覧側でまとめて受ける
 // （行ごとにリスナを張らないので、件数が増えても再描画が重くならない）。
-function noteRow(note: NoteMeta, locale: string): HTMLDivElement {
+function noteRow(note: NoteMeta, locale: string, pinned: boolean): HTMLDivElement {
   const item = el("div", "note-item" + (note.path === state.currentPath ? " selected" : ""));
   item.dataset.path = note.path;
+
+  // 見出しはスクロールで見えなくなるので、行にもピンの印を出す。
+  const title = el("div", "note-title");
+  if (pinned) title.append(el("span", "note-pin", "📌"));
+  title.append(note.title); // 文字列の append はテキストノードになる（エスケープ不要）
 
   const sub = el("div", "note-sub");
   sub.append(
@@ -37,7 +44,7 @@ function noteRow(note: NoteMeta, locale: string): HTMLDivElement {
   const more = el("button", "note-more", "⋯");
   more.title = t("menuMore");
 
-  item.append(el("div", "note-title", note.title), sub, more);
+  item.append(title, sub, more);
   return item;
 }
 
@@ -55,8 +62,15 @@ export function renderList(): void {
 
   // 表記は全件で同じなので、ロケールの解決は 1 回だけにする。
   const locale = localeOf();
+  const { pinned, rest } = splitByPin(visible);
   const frag = document.createDocumentFragment();
-  for (const note of visible) frag.append(noteRow(note, locale));
+  // 見出しはピンが 1 件以上あるときだけ出す（使っていない間は今までの見た目のまま）。
+  if (pinned.length) {
+    frag.append(el("div", "list-section", t("sectionPinned")));
+    for (const note of pinned) frag.append(noteRow(note, locale, true));
+    if (rest.length) frag.append(el("div", "list-section", t("sectionRecent")));
+  }
+  for (const note of rest) frag.append(noteRow(note, locale, false));
   // 差し替えは 1 回にまとめる（1 件ずつ append すると都度レイアウトが走る）。
   listEl.replaceChildren(frag);
   emptyEl.hidden = state.notes.length > 0 || state.currentPath !== null;

@@ -2,6 +2,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { state, notify } from "./store";
 import { refreshNotes, selectNote, newNote, commitCurrent } from "./notes";
+import { topNote } from "./pins";
 import { showEmptyState } from "./view-modes";
 import { watchWorkspace } from "./sync";
 import { updateWsName } from "./sidebar";
@@ -60,10 +61,12 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
   }
 
   const last = preferNote ?? readLastNote(path);
+  const top = topNote(state.notes);
   if (last && state.notes.some((n) => n.path === last)) {
     await selectNote(last);
-  } else if (state.notes.length) {
-    await selectNote(state.notes[0].path);
+  } else if (top) {
+    // 前回開いていたメモが無ければ、表示順の先頭（ピンがあればそれ）を開く。
+    await selectNote(top.path);
   } else {
     await newNote();
   }
