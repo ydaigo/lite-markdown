@@ -33,7 +33,7 @@ async function init(): Promise<void> {
 
 void init();
 
-// 自動更新は nightly ビルドのみ。開発時は VITE_UPDATER が無いので
+// 自動更新はリリースビルドのみ。ローカルでは VITE_UPDATER が無いので
 // updater のコードごとバンドルから外れる。設定でオフにしていれば確認しない。
 if (import.meta.env.VITE_UPDATER === "1" && isAutoUpdateEnabled()) {
   // 起動直後は避け、UI が落ち着いてから更新確認する。

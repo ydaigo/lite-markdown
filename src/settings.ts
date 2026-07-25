@@ -1,3 +1,4 @@
+import { getVersion } from "@tauri-apps/api/app";
 import { LS } from "./constants";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
 import { applyLanguage } from "./localize";
@@ -7,7 +8,7 @@ import { SHORTCUTS } from "./shortcuts";
 // 設定ダイアログ（言語 / 自動更新 / ショートカット一覧）
 // ============================================================================
 
-// 自動更新のコードが入っているビルドかどうか（nightly のみ 1）。
+// 自動更新のコードが入っているビルドかどうか（リリースビルドのみ 1）。
 const UPDATER_BUILD = import.meta.env.VITE_UPDATER === "1";
 
 // 自動更新は既定で有効。明示的に切ったときだけ "0" を保存する。
@@ -16,6 +17,18 @@ export const isAutoUpdateEnabled = (): boolean => localStorage.getItem(LS.autoUp
 function setAutoUpdateEnabled(on: boolean): void {
   localStorage.setItem(LS.autoUpdate, on ? "1" : "0");
 }
+
+// 自動更新が効いたかを確かめる手がかりになるので、現在のバージョンを表示する。
+// 起動中に変わらない値なので一度だけ取得し、届いたら開いているダイアログを描き直す。
+let appVersion = "";
+void getVersion()
+  .then((v) => {
+    appVersion = v;
+    render();
+  })
+  .catch(() => {
+    /* 取得できなければバージョン行を出さないだけ */
+  });
 
 let overlay: HTMLDivElement | null = null;
 
@@ -76,7 +89,15 @@ function updateSection(): HTMLDivElement {
   check.disabled = !UPDATER_BUILD;
   check.addEventListener("change", () => setAutoUpdateEnabled(check.checked));
 
-  const sec = section(t("sectionUpdate"), row(t("autoUpdateLabel"), check));
+  const rows = [row(t("autoUpdateLabel"), check)];
+  if (appVersion) {
+    const value = document.createElement("span");
+    value.className = "sc-value";
+    value.textContent = `v${appVersion}`;
+    rows.unshift(row(t("versionLabel"), value));
+  }
+
+  const sec = section(t("sectionUpdate"), ...rows);
   if (!UPDATER_BUILD) {
     const note = document.createElement("div");
     note.className = "sc-note";

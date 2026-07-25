@@ -67,6 +67,7 @@ const ja = {
   sectionUpdate: "更新",
   sectionShortcuts: "キーボードショートカット",
   langSelectLabel: "表示言語",
+  versionLabel: "バージョン",
   autoUpdateLabel: "起動時に自動で更新を確認する",
   autoUpdateUnavailable: "このビルドでは自動更新は利用できません",
 
@@ -128,6 +129,7 @@ const en: Record<MsgKey, string> = {
   sectionUpdate: "Updates",
   sectionShortcuts: "Keyboard shortcuts",
   langSelectLabel: "Display language",
+  versionLabel: "Version",
   autoUpdateLabel: "Check for updates on startup",
   autoUpdateUnavailable: "Auto update is not available in this build",
 

@@ -6,7 +6,7 @@ fn main() {
 
     let attributes = tauri_build::Attributes::new();
 
-    // updater は --features updater を付けた nightly ビルドのみ有効。プラグインを
+    // updater は --features updater を付けたリリースビルドのみ有効。プラグインを
     // リンクしない既定ビルドでは capabilities/updater.json をパース対象から外し、
     // 存在しない updater パーミッションの検証エラーを避ける。
     #[cfg(feature = "updater")]

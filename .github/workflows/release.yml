@@ -1,22 +1,96 @@
 name: release
 
-# バージョンタグ（例: v0.1.0）を push すると、Mac / Windows の
-# インストーラをビルドして GitHub Release に添付します。
+# 安定版リリース（＝全ユーザーへの配信）。
+# Actions から bump を選んで実行すると、バージョン採番 → タグ作成 → Mac/Win ビルド →
+# GitHub Release 公開までを一気に行います。
+# インストーラには updater が入るため、公開した時点で既存ユーザーは次回起動時に
+# 自動更新されます（アプリの設定でオフにできます）。
 on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "上げるバージョン"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+  # 手動でタグを打った場合の逃げ道。tauri.conf.json の version と一致している必要があります。
   push:
     tags:
       - "v*"
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "リリースタグ (例 v0.1.0)"
-        required: true
-        default: "v0.1.0"
+
+# 同時に 2 本リリースが走ると採番が衝突するため直列化する。
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
-  build:
+  # バージョンを確定し、タグを用意する。
+  prepare:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: resolve
+        shell: bash
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          conf=src-tauri/tauri.conf.json
+          current=$(node -p "require('./$conf').version")
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # タグ起点: タグ名を正とし、conf 側とズレていたら止める。
+            version="${GITHUB_REF_NAME#v}"
+            if [ "$version" != "$current" ]; then
+              echo "::error::タグ ${GITHUB_REF_NAME} と $conf の version ($current) が一致しません"
+              exit 1
+            fi
+          else
+            # 手動起点: conf の version を bump して、コミットとタグを作る。
+            version=$(node -e "
+              const [ma,mi,pa] = '$current'.split('.').map(Number);
+              const b = process.env.BUMP;
+              const next = b === 'major' ? [ma+1,0,0] : b === 'minor' ? [ma,mi+1,0] : [ma,mi,pa+1];
+              console.log(next.join('.'));
+            ")
+            # tauri.conf.json が正。npm ci が落ちないよう package.json と
+            # package-lock.json の version も同じ値に揃える。
+            node -e "
+              const fs = require('fs');
+              const write = (f, c) => fs.writeFileSync(f, JSON.stringify(c, null, 2) + '\n');
+              for (const f of ['$conf', 'package.json']) {
+                const c = JSON.parse(fs.readFileSync(f, 'utf8'));
+                c.version = '$version';
+                write(f, c);
+              }
+              const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+              lock.version = '$version';
+              lock.packages[''].version = '$version';
+              write('package-lock.json', lock);
+            "
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore: リリース v$version"
+            git tag "v$version"
+            git push origin HEAD:${{ github.ref_name }}
+            git push origin "v$version"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "リリース対象: v$version"
+
+  build:
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -29,6 +103,9 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # prepare が作ったタグ（＝採番済みの version）をビルドする。
+          ref: ${{ needs.prepare.outputs.tag }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -46,27 +123,119 @@ jobs:
           workspaces: "./src-tauri -> target"
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
 
-      # 自動更新は nightly チャネル専用。タグ付きリリースは素のインストーラを配るだけなので
-      # --features updater / tauri.nightly.conf.json / VITE_UPDATER は渡さない
-      # （.sig も latest.json も不要）。
-      - name: Build & release (Tauri)
-        uses: tauri-apps/tauri-action@v0
+      - name: Build app (installers + updater artifacts)
+        run: npm run tauri -- build ${{ matrix.args }} --features updater --config src-tauri/tauri.release.conf.json
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # フロント側の更新チェックを有効化。これが無いと updater のコードは
+          # バンドルされない（ローカルビルドでは自動更新しないため）。
+          VITE_UPDATER: "1"
+          # updater パッケージの署名鍵（GitHub Secrets に登録）。
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Collect installers & updater artifacts
+        shell: bash
+        run: |
+          mkdir -p dist
+          find src-tauri/target -type f \
+            \( -name "*.dmg" -o -name "*.msi" -o -name "*.exe" -o -name "*.sig" -o -name "*.tar.gz" \) \
+            -path "*/release/bundle/*" -exec cp {} dist/ \;
+          ls -la dist
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
-          releaseName: "lite-markdown ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}"
-          releaseBody: |
+          name: lite-markdown-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten & list
+        run: |
+          find dist -type f -exec mv {} dist/ \; 2>/dev/null || true
+          find dist -maxdepth 1 -type f
+
+      # updater が参照する更新マニフェスト。各プラットフォームの .sig と
+      # アセットの DL URL から組み立てる。
+      - name: Generate latest.json
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          node <<'EOF'
+          const fs = require('fs'), path = require('path');
+          const dir = 'dist';
+          const base = `https://github.com/ydaigo/lite-markdown/releases/download/${process.env.TAG}/`;
+          const files = fs.readdirSync(dir);
+          const sig = (f) => fs.readFileSync(path.join(dir, f), 'utf8').trim();
+          const platforms = {};
+          // Windows: NSIS setup.exe が updater ターゲット
+          const winExe = files.find((f) => /-setup\.exe$/.test(f));
+          const winSig = files.find((f) => /-setup\.exe\.sig$/.test(f));
+          if (winExe && winSig) {
+            platforms['windows-x86_64'] = { signature: sig(winSig), url: base + encodeURIComponent(winExe) };
+          }
+          // macOS: universal .app.tar.gz を両アーキで共有
+          const macTar = files.find((f) => /\.app\.tar\.gz$/.test(f));
+          const macSig = files.find((f) => /\.app\.tar\.gz\.sig$/.test(f));
+          if (macTar && macSig) {
+            const e = { signature: sig(macSig), url: base + encodeURIComponent(macTar) };
+            platforms['darwin-x86_64'] = e;
+            platforms['darwin-aarch64'] = e;
+          }
+          // 片方でも欠けると、その OS のユーザーが更新できないまま気付けない。
+          for (const key of ['windows-x86_64', 'darwin-x86_64', 'darwin-aarch64']) {
+            if (!platforms[key]) {
+              console.error(`更新アーティファクトが揃っていません: ${key}（署名鍵の Secrets を確認してください）`);
+              process.exit(1);
+            }
+          }
+          const manifest = {
+            version: process.env.VERSION,
+            notes: `lite-markdown ${process.env.TAG}`,
+            pub_date: new Date().toISOString(),
+            platforms,
+          };
+          fs.writeFileSync(path.join(dir, 'latest.json'), JSON.stringify(manifest, null, 2));
+          console.log(JSON.stringify(manifest, null, 2));
+          EOF
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: "lite-markdown ${{ needs.prepare.outputs.tag }}"
+          # prerelease にすると releases/latest から外れ、自動更新の対象にならない。
+          prerelease: false
+          body: |
             ものすごく軽量な Markdown / メモアプリ。
 
             ### ダウンロード
-            - **Windows**: `.msi` または `.exe` (NSIS)
-            - **macOS**: `.dmg` (Intel / Apple Silicon 両対応 universal)
+            - **Windows**: `.msi` または `.exe`（NSIS）
+            - **macOS**: `.dmg`（Intel / Apple Silicon 両対応 universal）
 
-            > 署名なしのため、初回起動時に Windows SmartScreen / macOS Gatekeeper の警告が出ます。
-            > Windows: 「詳細情報」→「実行」。 macOS: 右クリック →「開く」で許可してください。
-          releaseDraft: false
-          prerelease: false
-          args: ${{ matrix.args }}
+            インストール済みの方は何もする必要はありません。次回起動時に自動更新されます
+            （設定ダイアログの「更新」からオフにできます）。
+
+            > 署名なしのため初回起動時に警告が出ます。
+            > Windows: 「詳細情報」→「実行」／ macOS: 右クリック →「開く」。
+          files: |
+            dist/*.dmg
+            dist/*.msi
+            dist/*.exe
+            dist/*.tar.gz
+            dist/*.sig
+            dist/latest.json

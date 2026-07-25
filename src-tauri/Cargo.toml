@@ -20,11 +20,11 @@ tauri-plugin-opener = "2"
 tauri-plugin-clipboard-manager = "2"
 # ソース中に参照は無いが必須。generate_context! は設定の plugins セクションを
 # 展開する際にクレート直下の serde_json を参照するコードを生成する
-# （tauri.nightly.conf.json の plugins.updater を読む nightly ビルドで効く）。
+# （tauri.release.conf.json の plugins.updater を読むリリースビルドで効く）。
 serde_json = "1"
 
 # updater はデスクトップ専用。--features updater を付けた時だけコンパイルする
-# （ローカルビルドを軽くするため、既定では含めない。nightly の CI ビルドで有効化）。
+# （ローカルビルドを軽くするため、既定では含めない。リリースの CI ビルドで有効化）。
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = { version = "2", optional = true }
 
