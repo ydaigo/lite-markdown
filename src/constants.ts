@@ -18,6 +18,10 @@ export const IMAGE_DIR = "image";
 // 自動保存のデバウンス時間(ms)。
 export const SAVE_DEBOUNCE_MS = 400;
 
+// 外部（別ウィンドウ / 他アプリ）の変更を確認する間隔(ms)。
+// 確認するのはパスと更新時刻だけで、差分が無ければ本文の読み直しも再描画もしない。
+export const SYNC_INTERVAL_MS = 1000;
+
 // 起動後に更新確認を行うまでの遅延(ms)。UI が落ち着いてから実行する。
 export const UPDATE_CHECK_DELAY_MS = 3000;
 

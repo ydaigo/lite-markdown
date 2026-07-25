@@ -5,6 +5,7 @@ import { initTheme } from "./view-modes";
 import { applyLanguage } from "./localize";
 import { isAutoUpdateEnabled } from "./settings";
 import { initWorkspace } from "./workspace";
+import { startSync } from "./sync";
 import { revealWindow, isMainWindow } from "./app-window";
 import { prefetchRenderer } from "./preview";
 import { UPDATE_CHECK_DELAY_MS, REVEAL_DEADLINE_MS } from "./constants";
@@ -20,6 +21,8 @@ async function init(): Promise<void> {
   initTheme();
   applyLanguage();
   await initWorkspace();
+  // 一覧を読み込んだ後に監視を始める（別ウィンドウ・他アプリの変更を取り込む）。
+  startSync();
 }
 
 // ウィンドウは中身を描き終えてから出す（起動時の白いちらつき対策）。

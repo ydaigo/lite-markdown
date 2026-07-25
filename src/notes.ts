@@ -34,14 +34,24 @@ function saveLastNote(path: string): void {
 // ============================================================================
 // 自動保存
 // ============================================================================
-export function scheduleSave(): void {
+// 保存待ちのタイマーを取り消す。「待ちが無い」ことを外から見分けられるよう
+// undefined へ戻す（外部の変更を取り込むかどうかの判断に使う → sync.ts）。
+function cancelSaveTimer(): void {
   clearTimeout(state.saveTimer);
+  state.saveTimer = undefined;
+}
+
+// まだ書き出していない編集が残っているか。
+export const hasPendingSave = (): boolean => state.saveTimer !== undefined;
+
+export function scheduleSave(): void {
+  cancelSaveTimer();
   state.saveTimer = window.setTimeout(() => void flushSave(), SAVE_DEBOUNCE_MS);
 }
 
 // 現在のメモを書き込み、一覧のメタを更新して先頭へ並べ替える。
 export async function flushSave(): Promise<void> {
-  clearTimeout(state.saveTimer);
+  cancelSaveTimer();
   const path = state.currentPath;
   if (!path) return;
   const text = getDoc();
@@ -62,7 +72,7 @@ export async function flushSave(): Promise<void> {
 
 // 別のメモへ移る前に、現在のメモを確定（空なら破棄）する。
 export async function commitCurrent(): Promise<void> {
-  clearTimeout(state.saveTimer);
+  cancelSaveTimer();
   const path = state.currentPath;
   if (!path) return;
   const text = getDoc();
@@ -84,23 +94,38 @@ export async function commitCurrent(): Promise<void> {
 // メモ操作
 // ============================================================================
 // 1 件分のメタを読み取る。読めないファイルは null（一覧から外す）。
-async function readNoteMeta(path: string): Promise<NoteMeta | null> {
+async function readNoteMeta(path: string, mtime: number): Promise<NoteMeta | null> {
   let text: string;
   try {
     text = await readTextFile(path);
   } catch {
     return null;
   }
-  const mtime = await statMtime(path);
   return { path, ...deriveMeta(text), mtime, hay: text.toLowerCase() };
 }
 
-export async function refreshNotes(): Promise<void> {
+// ワークスペース内の .md のパスと更新時刻を集める。本文は読まないので軽い。
+// 一覧の変化を調べるだけの用途（sync.ts の定期確認）にも使う。
+export async function listNoteStamps(): Promise<Map<string, number>> {
   const entries = await readDir(state.workspace);
-  const mdNames = entries.filter((e) => e.isFile && /\.md$/i.test(e.name)).map((e) => e.name);
-  // メモごとの読み取りは互いに独立なので並行に走らせる（起動時間に直結する）。
+  const paths = entries
+    .filter((e) => e.isFile && /\.md$/i.test(e.name))
+    .map((e) => joinPath(state.workspace, e.name));
+  // stat は 1 件ごとに Rust を呼ぶので並行に走らせる。
+  const stamps = await Promise.all(paths.map(statMtime));
+  return new Map(paths.map((p, i) => [p, stamps[i]]));
+}
+
+// 一覧を作り直す。stamps を渡せば readDir / stat をやり直さない。
+// 更新時刻が変わっていないメモは本文を読み直さず、前回のメタを使い回す。
+export async function refreshNotes(stamps?: Map<string, number>): Promise<void> {
+  const found = stamps ?? (await listNoteStamps());
+  const known = new Map(state.notes.map((n) => [n.path, n]));
   const metas = await Promise.all(
-    mdNames.map((name) => readNoteMeta(joinPath(state.workspace, name))),
+    [...found].map(([path, mtime]) => {
+      const cached = known.get(path);
+      return cached && cached.mtime === mtime ? cached : readNoteMeta(path, mtime);
+    }),
   );
   const list = metas.filter((m): m is NoteMeta => m !== null);
   sortByMtimeDesc(list);
