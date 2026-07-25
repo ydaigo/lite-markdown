@@ -204,7 +204,20 @@ body {
    src-tauri/tauri.macos.conf.json の titleBarStyle: Overlay により、OS のボタンが
    タイトルバーの左上に重なって描かれるため、自作のボタンは出さず重なる分を空ける。
    余白は trafficLightPosition の x(14) + ボタン 3 つ（12px × 3 ＋ 間隔 8px × 2）に
-   ゆとりを足した値。位置を変えるときは constants.ts の MAC_TRAFFIC_LIGHT も合わせる。 */
+   ゆとりを足した値。位置を変えるときは constants.ts の MAC_TRAFFIC_LIGHT も合わせる。
+
+   OS のボタンは縦位置を指定できず、中心が上端から 16px に固定される（理由は
+   constants.ts の MAC_TRAFFIC_LIGHT のコメント）。こちらの中身をその高さへ合わせる
+   ため、macOS だけタイトルバーを 33px（枠線 1px を除く内容 32px → 中心 16px）にする。 */
+:root[data-os="mac"] #titlebar {
+  height: 33px;
+}
+
+/* 32px の中で 30px は窄いので、ボタンも少し詰める。 */
+:root[data-os="mac"] .tb-btn {
+  height: 26px;
+}
+
 :root[data-os="mac"] .tb-left {
   padding-left: 78px;
 }
