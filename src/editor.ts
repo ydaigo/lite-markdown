@@ -91,6 +91,10 @@ let imagePasteHandler: ((file: File, v: EditorView) => void) | null = null;
 // setDoc による差し替え中は「利用者の編集」ではないので自動保存を起こさない。
 let loading = false;
 
+// 最後にディスクと内容が一致していた地点。ここから変わっていなければ書き込まない
+// （メモを開いただけ・カーソルを動かしただけで更新時刻を動かさないため）。
+let baseline = "";
+
 export function setDocChangeHandler(fn: () => void): void {
   docChangeHandler = fn;
 }
@@ -144,10 +148,20 @@ const view = new EditorView({
 export const getDoc = (): string => view.state.doc.toString();
 
 // プログラムから内容を差し替える（この間の変更では自動保存を走らせない）。
+// ディスクから読み込んだ地点でもあるので、変更検知の基準もここで揃える。
 export function setDoc(text: string): void {
   loading = true;
   view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
   loading = false;
+  baseline = text;
+}
+
+// 基準から内容が変わっているか（＝書き出す必要があるか）。
+export const isDocDirty = (): boolean => view.state.doc.toString() !== baseline;
+
+// 書き出せた分だけ基準を進める（setDoc と対になる）。
+export function markDocSaved(text: string): void {
+  baseline = text;
 }
 
 export function focusEditor(): void {

@@ -3,7 +3,7 @@ import { ask } from "@tauri-apps/plugin-dialog";
 import type { NoteMeta } from "./store";
 import { state, notify } from "./store";
 import { emptyEl } from "./dom";
-import { getDoc, setDoc } from "./editor";
+import { getDoc, setDoc, isDocDirty, markDocSaved } from "./editor";
 import { setMode, showEmptyState, updateTitle } from "./view-modes";
 import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
@@ -51,13 +51,16 @@ export function scheduleSave(): void {
 }
 
 // 現在のメモを書き込み、一覧のメタを更新して先頭へ並べ替える。
+// 内容が変わっていなければ何もしない（開いただけのメモを更新扱いにしない）。
 export async function flushSave(): Promise<void> {
   cancelSaveTimer();
   const path = state.currentPath;
   if (!path) return;
   const text = getDoc();
+  if (!isDocDirty()) return;
   const ok = await withErrorNotice(t("saveFailed"), () => writeTextFile(path, text));
   if (!ok) return;
+  markDocSaved(text);
   const meta = state.notes.find((n) => n.path === path);
   if (!meta) return;
   const d = deriveMeta(text);
@@ -160,7 +163,7 @@ function showNote(path: string, text: string, mode = state.mode): void {
 export async function selectNote(path: string): Promise<void> {
   if (path === state.currentPath) return;
   await commitCurrent();
-  state.currentPath = path;
+  // 読めたときに showNote が currentPath を差し替える（失敗したら元のメモに留まる）。
   let text: string;
   try {
     text = await readTextFile(path);
