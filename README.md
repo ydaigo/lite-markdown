@@ -60,8 +60,16 @@ Tauri v2 製の、ものすごく軽量な Markdown / メモアプリ（Windows 
 ```bash
 npm install
 # アイコン生成（初回のみ・ソース画像から一式生成）
-npm run tauri icon src-tauri/icons/source.png
+npm run icons
 ```
+
+> `npm run tauri icon` を単体で叩くと macOS 用の `icon.icns` がフチなしに戻ります。
+> `tauri icon` はソース画像を単純にリサイズするだけで、macOS のアイコングリッド
+> （1024 キャンバスに対して本体 824x824・角丸半径 185.4px）を考慮しないため、
+> Dock で他アプリより一段大きく見えてしまいます。`npm run icons` は `tauri icon` の後に
+> `npm run icons:mac` を実行して `icon.icns` だけ規格に合わせて作り直します。
+> Windows の `.ico` はフチなしが慣例なのでそのままです。
+> なお `icons:mac` は `swift` と `iconutil` を使うため macOS 専用です。
 
 ## 開発起動
 

@@ -8,6 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "icons": "tauri icon src-tauri/icons/source.png && npm run icons:mac",
+    "icons:mac": "swift scripts/gen-macos-icns.swift src-tauri/icons/source.png src-tauri/icons/icon.icns",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "lint": "eslint src",
