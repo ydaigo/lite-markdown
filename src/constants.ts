@@ -2,16 +2,6 @@
 // アプリ全体で共有する定数・文言
 // ============================================================================
 
-// localStorage キー
-export const LS = {
-  workspaces: "lm.workspaces",
-  current: "lm.workspace",
-  theme: "lm.theme",
-  lang: "lm.lang",
-  autoUpdate: "lm.autoUpdate",
-  lastNote: "lm.lastNote", // { [workspace]: notePath }
-} as const;
-
 // 画像を保存するワークスペース内サブフォルダ名。
 export const IMAGE_DIR = "image";
 
@@ -24,6 +14,9 @@ export const WATCH_DEBOUNCE_MS = 150;
 
 // フォルダの監視を開始できなかったときだけ使う、確認間隔(ms)。
 export const SYNC_FALLBACK_INTERVAL_MS = 1000;
+
+// 軽い一時通知（トースト）を表示しておく時間(ms)。
+export const TOAST_DURATION_MS = 1800;
 
 // 起動後に更新確認を行うまでの遅延(ms)。UI が落ち着いてから実行する。
 export const UPDATE_CHECK_DELAY_MS = 3000;
@@ -44,4 +37,5 @@ export const NOTE_WINDOW = {
   minHeight: 360,
 } as const;
 
-// UI 文言は言語ごとに切り替わるため i18n.ts に置く（t() 経由で取得）。
+// UI 文言は言語ごとに切り替わるため messages.ts に置く（t() 経由で取得）。
+// localStorage のキーは prefs.ts に置く（読み書きも同モジュールに閉じる）。

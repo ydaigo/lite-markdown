@@ -2,6 +2,9 @@
 // 汎用の純粋関数ヘルパ
 // ============================================================================
 
+// 一覧に載せる Markdown ファイルか（ファイル名でもフルパスでも判定できる）。
+export const isMarkdownPath = (p: string): boolean => /\.md$/i.test(p);
+
 // パス末尾のフォルダ/ファイル名を取り出す（Windows/Unix 両対応）。
 export const baseName = (p: string): string =>
   p

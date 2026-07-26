@@ -1,10 +1,12 @@
 import { readTextFile, watch, type UnwatchFn, type WatchEvent } from "@tauri-apps/plugin-fs";
 import { state, notify } from "./store";
 import { getDoc, setDoc } from "./editor";
-import { listNoteStamps, refreshNotes, hasPendingSave } from "./notes";
+import { listNoteStamps, refreshNotes } from "./notes";
+import { hasPendingSave } from "./autosave";
 import { renderPreview } from "./preview";
 import { showEmptyState, updateTitle } from "./view-modes";
 import { statMtime } from "./fs-utils";
+import { isMarkdownPath } from "./utils";
 import { WATCH_DEBOUNCE_MS, SYNC_FALLBACK_INTERVAL_MS } from "./constants";
 
 // ============================================================================
@@ -21,8 +23,6 @@ let seen: Map<string, number> | null = null;
 let running = false;
 let unwatch: UnwatchFn | null = null;
 let fallbackTimer: number | undefined;
-
-const isMarkdown = (path: string): boolean => /\.md$/i.test(path);
 
 const sameStamps = (a: Map<string, number>, b: Map<string, number>): boolean => {
   if (a.size !== b.size) return false;
@@ -83,7 +83,8 @@ async function syncChanged(paths: string[]): Promise<void> {
     const next = new Map(seen);
     paths.forEach((path, i) => {
       const mtime = stamps[i];
-      if (mtime === null) next.delete(path); // 消えた
+      // null は「消えた」を意味する（fs-utils の statMtime）。
+      if (mtime === null) next.delete(path);
       else next.set(path, mtime);
     });
     await apply(next);
@@ -102,7 +103,7 @@ function inSyncWithNotes(stamps: Map<string, number>): boolean {
 // 監視からの通知。既に知っている .md だけが変わったのなら、その分だけ確認する。
 // 追加・改名・見慣れないパスが混じるときは、取りこぼさないよう全体を数え直す。
 function onWatchEvent(event: WatchEvent): void {
-  const md = event.paths.filter(isMarkdown);
+  const md = event.paths.filter(isMarkdownPath);
   const stamps = seen;
   const known =
     stamps !== null && md.length > 0 && md.every((p) => stamps.has(p)) && inSyncWithNotes(stamps);

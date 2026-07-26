@@ -19,7 +19,7 @@
     </style>
     <script>
       // 保存済みテーマを最初の描画より前に反映する。未保存なら OS の設定に従う
-      // （キーと既定値は constants.ts / store.ts と対応）。
+      // （キーは prefs.ts、既定値の判定は store.ts の initialTheme() と対応）。
       (function () {
         var t = localStorage.getItem("lm.theme");
         if (t !== "light" && t !== "dark") {

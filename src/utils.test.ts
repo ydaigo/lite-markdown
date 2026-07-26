@@ -1,5 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { baseName, dirName, joinPath } from "./utils";
+import { baseName, dirName, isMarkdownPath, joinPath } from "./utils";
+
+describe("isMarkdownPath", () => {
+  it("拡張子 .md を大文字小文字を問わず判定する", () => {
+    expect(isMarkdownPath("note.md")).toBe(true);
+    expect(isMarkdownPath("C:\\Users\\daigo\\notes\\note.MD")).toBe(true);
+  });
+
+  it("他の拡張子は対象外", () => {
+    expect(isMarkdownPath("image/img-1.png")).toBe(false);
+    expect(isMarkdownPath("note.markdown")).toBe(false);
+    expect(isMarkdownPath("note.md.bak")).toBe(false);
+    expect(isMarkdownPath("notes")).toBe(false);
+  });
+});
 
 describe("baseName", () => {
   it("Unix パスの末尾要素を返す", () => {

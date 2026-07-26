@@ -2,7 +2,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { state } from "./store";
-import { flushSave } from "./notes";
+import { flushSave } from "./autosave";
 import { withErrorNotice, showErrorFor, showToast } from "./errors";
 import { NOTE_WINDOW } from "./constants";
 import { t } from "./i18n";

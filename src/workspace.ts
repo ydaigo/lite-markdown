@@ -1,37 +1,40 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { homeDir, join } from "@tauri-apps/api/path";
 import { state, notify } from "./store";
-import { wsMenuEl, el } from "./dom";
-import { openContextMenu, type MenuItem } from "./context-menu";
-import { openFolder } from "./note-actions";
 import { refreshNotes, selectNote, newNote, commitCurrent } from "./notes";
 import { showEmptyState } from "./view-modes";
 import { watchWorkspace } from "./sync";
 import { updateWsName } from "./sidebar";
-import { readJSON, writeJSON } from "./storage";
 import { mkdirSafe } from "./fs-utils";
 import { showErrorFor } from "./errors";
-import { baseName, dirName } from "./utils";
-import { LS, DEFAULT_WORKSPACE_DIR } from "./constants";
+import { dirName } from "./utils";
+import {
+  readWorkspaces,
+  writeWorkspaces,
+  readCurrentWorkspace,
+  writeCurrentWorkspace,
+  readLastNote,
+} from "./prefs";
+import { DEFAULT_WORKSPACE_DIR } from "./constants";
 import { t } from "./i18n";
 
 // ============================================================================
-// ワークスペース（フォルダ）
+// ワークスペース（フォルダ）の選択と履歴
 // ============================================================================
+// 切替メニューの見た目は workspace-menu.ts が持つ。ここは状態と永続化だけを扱う。
+
 function registerWorkspace(path: string): void {
-  if (!state.workspaces.includes(path)) {
-    state.workspaces.unshift(path);
-    writeJSON(LS.workspaces, state.workspaces);
-  }
+  if (state.workspaces.includes(path)) return;
+  state.workspaces.unshift(path);
+  writeWorkspaces(state.workspaces);
 }
 
 // 履歴から外す。フォルダとメモには触らない。
 // 開いているワークスペースは対象外（起動時の復元で registerWorkspace が戻すため）。
-function removeWorkspaceFromHistory(path: string): void {
+export function removeWorkspaceFromHistory(path: string): void {
   if (path === state.workspace) return;
   state.workspaces = state.workspaces.filter((w) => w !== path);
-  writeJSON(LS.workspaces, state.workspaces);
-  toggleWsMenu(true); // メニューは開いたまま作り直す
+  writeWorkspaces(state.workspaces);
 }
 
 // preferNote を渡すと、前回開いていたメモより優先してそれを開く
@@ -41,8 +44,7 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
   await mkdirSafe(path);
   state.workspace = path;
   state.currentPath = null;
-  // カレントワークスペースは生の文字列で保存。
-  localStorage.setItem(LS.current, path);
+  writeCurrentWorkspace(path);
   registerWorkspace(path);
   updateWsName();
 
@@ -57,7 +59,7 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
     return;
   }
 
-  const last = preferNote ?? readJSON<Record<string, string>>(LS.lastNote, {})[path];
+  const last = preferNote ?? readLastNote(path);
   if (last && state.notes.some((n) => n.path === last)) {
     await selectNote(last);
   } else if (state.notes.length) {
@@ -72,7 +74,7 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
 
 // 起動時の復元: 前回のワークスペース、無ければホーム直下の既定フォルダを開く。
 export async function initWorkspace(): Promise<void> {
-  state.workspaces = readJSON<string[]>(LS.workspaces, []);
+  state.workspaces = readWorkspaces();
 
   // 別ウィンドウで開かれた場合は URL でメモが指定される（note-actions.ts）。
   // メモは必ずワークスペース直下にあるので、その親フォルダを開く。
@@ -82,7 +84,7 @@ export async function initWorkspace(): Promise<void> {
     return;
   }
 
-  const current = localStorage.getItem(LS.current);
+  const current = readCurrentWorkspace();
   if (current) {
     await setWorkspace(current);
     return;
@@ -93,60 +95,4 @@ export async function initWorkspace(): Promise<void> {
 export async function chooseWorkspaceFolder(): Promise<void> {
   const dir = await open({ directory: true, multiple: false, title: t("chooseWorkspaceTitle") });
   if (typeof dir === "string") await setWorkspace(dir);
-}
-
-// 履歴 1 件分に対する操作。開いているワークスペースは履歴から外せない。
-function wsMenuItems(ws: string): MenuItem[] {
-  const items: MenuItem[] = [{ label: t("menuOpenFolder"), action: () => void openFolder(ws) }];
-  if (ws !== state.workspace) {
-    items.push({
-      label: t("menuRemoveFromHistory"),
-      action: () => removeWorkspaceFromHistory(ws),
-    });
-  }
-  return items;
-}
-
-// 履歴 1 件分の行。切替のボタンと ⋯ は別々のボタンにする（button は入れ子にできない）。
-function wsRow(ws: string): HTMLElement {
-  const row = el("div", "ws-row");
-  const b = el("button", "ws-item" + (ws === state.workspace ? " active" : ""));
-  // フォルダ名とパスはそのまま表示する（textContent なのでエスケープ不要）。
-  b.append(el("span", "ws-item-name", baseName(ws)), el("span", "ws-item-path", ws));
-  b.addEventListener("click", () => {
-    toggleWsMenu(false);
-    if (ws !== state.workspace) void setWorkspace(ws);
-  });
-
-  const more = el("button", "ws-more", "⋯");
-  more.title = t("menuMore");
-  more.addEventListener("click", (e) => {
-    // 切替メニューは開いたままにしたいので、外側クリックの購読へ伝えない
-    // （events.ts の toggleWsMenu(false) と context-menu.ts の closeContextMenu）。
-    e.stopPropagation();
-    const r = more.getBoundingClientRect();
-    openContextMenu(wsMenuItems(ws), r.left, r.bottom + 2);
-  });
-
-  row.append(b, more);
-  return row;
-}
-
-// ワークスペース切替メニュー
-export function toggleWsMenu(show?: boolean): void {
-  const willShow = show ?? wsMenuEl.hidden;
-  if (!willShow) {
-    wsMenuEl.hidden = true;
-    return;
-  }
-  const items: HTMLElement[] = state.workspaces.map(wsRow);
-
-  const choose = el("button", "ws-item ws-choose", t("chooseFolder"));
-  choose.addEventListener("click", () => {
-    toggleWsMenu(false);
-    void chooseWorkspaceFolder();
-  });
-
-  wsMenuEl.replaceChildren(...items, el("div", "ws-sep"), choose);
-  wsMenuEl.hidden = false;
 }

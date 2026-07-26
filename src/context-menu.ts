@@ -41,6 +41,12 @@ export function openContextMenu(items: MenuItem[], x: number, y: number): void {
   if (r.bottom > window.innerHeight) menu.style.top = `${window.innerHeight - r.height - 8}px`;
 }
 
+// ボタンの直下にメニューを開く（⋯ ボタンから開く場合）。
+export function openMenuUnder(anchor: HTMLElement, items: MenuItem[]): void {
+  const r = anchor.getBoundingClientRect();
+  openContextMenu(items, r.left, r.bottom + 2);
+}
+
 // 外側クリック・フォーカス喪失・リサイズで閉じる。
 document.addEventListener("click", closeContextMenu);
 window.addEventListener("blur", closeContextMenu);

@@ -1,6 +1,6 @@
 import { getVersion } from "@tauri-apps/api/app";
 import { el } from "./dom";
-import { LS } from "./constants";
+import { isAutoUpdateEnabled, writeAutoUpdateEnabled } from "./prefs";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
 import { applyLanguage } from "./localize";
 import { SHORTCUTS } from "./shortcuts";
@@ -11,13 +11,6 @@ import { SHORTCUTS } from "./shortcuts";
 
 // 自動更新のコードが入っているビルドかどうか（リリースビルドのみ 1）。
 const UPDATER_BUILD = import.meta.env.VITE_UPDATER === "1";
-
-// 自動更新は既定で有効。明示的に切ったときだけ "0" を保存する。
-export const isAutoUpdateEnabled = (): boolean => localStorage.getItem(LS.autoUpdate) !== "0";
-
-function setAutoUpdateEnabled(on: boolean): void {
-  localStorage.setItem(LS.autoUpdate, on ? "1" : "0");
-}
 
 // 自動更新が効いたかを確かめる手がかりになるので、現在のバージョンを表示する。
 // 起動中に変わらない値なので一度だけ取得し、届いたら開いているダイアログを描き直す。
@@ -77,7 +70,7 @@ function updateSection(): HTMLDivElement {
   check.checked = UPDATER_BUILD && isAutoUpdateEnabled();
   // 更新機能を含まないビルドでは操作しても意味がないので触らせない。
   check.disabled = !UPDATER_BUILD;
-  check.addEventListener("change", () => setAutoUpdateEnabled(check.checked));
+  check.addEventListener("change", () => writeAutoUpdateEnabled(check.checked));
 
   const rows = [row(t("autoUpdateLabel"), check)];
   if (appVersion) {

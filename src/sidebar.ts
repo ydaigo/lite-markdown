@@ -4,7 +4,7 @@ import { baseName } from "./utils";
 import { formatDate } from "./format";
 import { t, localeOf } from "./i18n";
 import { selectNote, deleteNote } from "./notes";
-import { openContextMenu, type MenuItem } from "./context-menu";
+import { openContextMenu, openMenuUnder, type MenuItem } from "./context-menu";
 import { copyPath, openInNewWindow } from "./note-actions";
 
 // ============================================================================
@@ -74,8 +74,7 @@ listEl.addEventListener("click", (e) => {
   }
   // ⋯ ボタンは行の選択ではなくメニューを開く。
   e.stopPropagation();
-  const r = more.getBoundingClientRect();
-  openContextMenu(noteMenuItems(path), r.left, r.bottom + 2);
+  openMenuUnder(more, noteMenuItems(path));
 });
 
 listEl.addEventListener("contextmenu", (e) => {

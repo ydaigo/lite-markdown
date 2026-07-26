@@ -1,9 +1,9 @@
 import "./styles.css";
 import "./events"; // 副作用: DOM イベントの配線と購読の登録
 import { registerGlobalErrorHandlers } from "./errors";
-import { initTheme } from "./view-modes";
+import { applyTheme } from "./theme";
 import { applyLanguage } from "./localize";
-import { isAutoUpdateEnabled } from "./settings";
+import { isAutoUpdateEnabled } from "./prefs";
 import { initWorkspace } from "./workspace";
 import { startSync } from "./sync";
 import { revealWindow, isMainWindow } from "./app-window";
@@ -15,10 +15,10 @@ registerGlobalErrorHandlers();
 // ============================================================================
 // 初期化
 // ============================================================================
-// 保存済み設定の読み出しは各モジュールが持つ（テーマ=view-modes、言語=i18n、
-// 自動更新=settings、ワークスペース=workspace）。ここは順序だけを決める。
+// 保存済み設定の読み書きは prefs.ts に閉じており、テーマと言語は読み込み時点で
+// 解決済み（store.ts / i18n.ts）。ここは画面へ反映する順序だけを決める。
 async function init(): Promise<void> {
-  initTheme();
+  applyTheme();
   applyLanguage();
   // ワークスペースの監視は setWorkspace が張るので、ここでは復帰時の確認だけ足す。
   await initWorkspace();

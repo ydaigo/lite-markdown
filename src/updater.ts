@@ -1,7 +1,7 @@
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { btnUpdate, btnUpdateLabel } from "./dom";
-import { flushSave } from "./notes";
+import { flushSave } from "./autosave";
 import { showErrorFor, showToast } from "./errors";
 import { t } from "./i18n";
 

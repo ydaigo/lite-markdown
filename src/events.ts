@@ -14,9 +14,11 @@ import {
   wsBtn,
 } from "./dom";
 import { state, notify } from "./store";
-import { newNote, flushSave, scheduleSave } from "./notes";
-import { setMode, toggleMode, toggleTheme, toggleSearch, toggleSidebar } from "./view-modes";
-import { toggleWsMenu } from "./workspace";
+import { newNote } from "./notes";
+import { flushSave, scheduleSave } from "./autosave";
+import { setMode, toggleMode, toggleSearch, toggleSidebar } from "./view-modes";
+import { toggleTheme } from "./theme";
+import { toggleWsMenu } from "./workspace-menu";
 import {
   setDocChangeHandler,
   setImagePasteHandler,

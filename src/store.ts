@@ -1,6 +1,11 @@
+import { readTheme } from "./prefs";
+
 // ============================================================================
 // アプリ状態と、状態変更を購読者へ通知する軽量ストア
 // ============================================================================
+export type Theme = "light" | "dark";
+export type Mode = "edit" | "preview";
+
 export interface NoteMeta {
   path: string;
   title: string;
@@ -14,12 +19,18 @@ export interface AppState {
   workspaces: string[]; // 既知のワークスペース一覧
   notes: NoteMeta[];
   currentPath: string | null;
-  mode: "edit" | "preview";
+  mode: Mode;
   searchQuery: string; // 検索クエリ（小文字）
-  theme: "light" | "dark";
+  theme: Theme;
 }
 
-const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+// 保存済みのテーマ、無ければ OS の設定に従う。
+// エディタの生成時にはもう確定している必要があるため、ここで解決してしまう。
+function initialTheme(): Theme {
+  const saved = readTheme();
+  if (saved === "light" || saved === "dark") return saved;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
 export const state: AppState = {
   workspace: "",
@@ -28,9 +39,27 @@ export const state: AppState = {
   currentPath: null,
   mode: "edit",
   searchQuery: "",
-  theme: prefersDark ? "dark" : "light",
+  theme: initialTheme(),
 };
 
+// ============================================================================
+// メモ一覧の操作
+// ============================================================================
+// 一覧は更新時刻の降順（新しい順）に並べる。並び順と検索はこの 1 か所で揃える。
+export const sortNotes = (): void => {
+  state.notes.sort((a, b) => b.mtime - a.mtime);
+};
+
+export const findNote = (path: string | null): NoteMeta | undefined =>
+  state.notes.find((n) => n.path === path);
+
+export const removeNote = (path: string): void => {
+  state.notes = state.notes.filter((n) => n.path !== path);
+};
+
+// ============================================================================
+// 変更通知
+// ============================================================================
 type Listener = () => void;
 const listeners = new Set<Listener>();
 

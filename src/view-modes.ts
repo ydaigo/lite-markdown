@@ -1,24 +1,14 @@
-import { state, notify } from "./store";
-import {
-  editorEl,
-  emptyEl,
-  previewEl,
-  btnToggle,
-  btnTheme,
-  appEl,
-  searchBarEl,
-  searchInputEl,
-} from "./dom";
+import { state, notify, findNote, type Mode } from "./store";
+import { editorEl, emptyEl, previewEl, btnToggle, appEl, searchBarEl, searchInputEl } from "./dom";
 import { appWindow } from "./app-window";
-import { focusEditor, applyEditorTheme, setDoc } from "./editor";
+import { focusEditor, setDoc } from "./editor";
 import { renderPreview } from "./preview";
-import { LS } from "./constants";
 import { t } from "./i18n";
 
 // ============================================================================
 // 編集/プレビューの切替
 // ============================================================================
-export function setMode(next: "edit" | "preview"): void {
+export function setMode(next: Mode): void {
   state.mode = next;
   if (state.mode === "preview") {
     renderPreview();
@@ -47,34 +37,10 @@ export function showEmptyState(): void {
 }
 
 // ============================================================================
-// テーマ
-// ============================================================================
-export function applyTheme(): void {
-  document.documentElement.setAttribute("data-theme", state.theme);
-  btnTheme.textContent = state.theme === "dark" ? "☀️" : "🌙";
-  applyEditorTheme();
-}
-
-// 保存済みのテーマを復元して適用する。未保存なら OS の設定に従う（store の既定値）。
-export function initTheme(): void {
-  const saved = localStorage.getItem(LS.theme);
-  if (saved === "light" || saved === "dark") state.theme = saved;
-  applyTheme();
-}
-
-export function toggleTheme(): void {
-  state.theme = state.theme === "dark" ? "light" : "dark";
-  // テーマは生の文字列で保存（読み取り側と対称に保つ）。
-  localStorage.setItem(LS.theme, state.theme);
-  applyTheme();
-}
-
-// ============================================================================
 // タイトルバー
 // ============================================================================
 export async function updateTitle(): Promise<void> {
-  const cur = state.notes.find((n) => n.path === state.currentPath);
-  const name = cur ? cur.title : t("appName");
+  const name = findNote(state.currentPath)?.title ?? t("appName");
   await appWindow.setTitle(`${name} — ${t("appName")}`);
 }
 

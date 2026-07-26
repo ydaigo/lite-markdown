@@ -1,16 +1,18 @@
+import { TOAST_DURATION_MS } from "./constants";
+
 // ============================================================================
 // エラー表示と共通ハンドリング
 // ============================================================================
 
 // 通知用の要素は常時は要らないので、初回に作って以後は使い回す。
 function notifyEl(id: string): HTMLElement {
-  let el = document.getElementById(id);
-  if (!el) {
-    el = document.createElement("div");
-    el.id = id;
-    document.body.appendChild(el);
+  let node = document.getElementById(id);
+  if (!node) {
+    node = document.createElement("div");
+    node.id = id;
+    document.body.append(node);
   }
-  return el;
+  return node;
 }
 
 // 予期しないエラーを画面上のバーに可視化（白画面化を防ぐ）。
@@ -28,13 +30,13 @@ export function showErrorFor(message: string, e: unknown): void {
 // 成功などの軽い一時通知（数秒で自動的に消える）。エラーバーとは別枠。
 let toastTimer: number | undefined;
 export function showToast(msg: string): void {
-  const el = notifyEl("toast");
-  el.textContent = msg;
-  el.hidden = false;
+  const toast = notifyEl("toast");
+  toast.textContent = msg;
+  toast.hidden = false;
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
-    if (el) el.hidden = true;
-  }, 1800);
+    toast.hidden = true;
+  }, TOAST_DURATION_MS);
 }
 
 // 未捕捉エラー/未処理 Promise 拒否を画面へ表示する。
