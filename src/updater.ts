@@ -77,6 +77,9 @@ async function applyUpdate(): Promise<void> {
     await flushSave();
     await update.install();
     // Windows はここへ戻らない（インストーラ起動と同時に終了する）。
+    // macOS は .app を差し替えて戻ってくるだけなので、ボタンを引っ込めて知らせる。
+    pending = null;
+    btnUpdate.hidden = true;
     showToast(t("updateAppliedNextLaunch"));
   } catch (e) {
     showErrorFor(t("updateFailed"), e);
