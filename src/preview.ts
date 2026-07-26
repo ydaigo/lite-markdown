@@ -1,7 +1,10 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { previewEl } from "./dom";
 import { state } from "./store";
 import { getDoc } from "./editor";
+import { withErrorNotice } from "./errors";
+import { externalUrl } from "./utils";
 import { t } from "./i18n";
 
 // ============================================================================
@@ -55,3 +58,19 @@ function resolveLocalImages(): void {
     img.src = convertFileSrc(abs);
   });
 }
+
+// プレビュー内のリンククリック。previewEl は innerHTML を入れ替えるだけで
+// 作り直さないので、ここで一度だけ登録すれば再描画後も効き続ける。
+// リンクを踏むと webview 自体がそのページへ遷移してアプリが消えてしまうため、
+// 外部 URL かどうかに関わらず既定動作は必ず止める。
+// stopPropagation() はしない（document のクリックでメニューを閉じる処理を殺さない）。
+previewEl.addEventListener("click", (e) => {
+  const a = (e.target as HTMLElement).closest("a");
+  if (!a) return;
+  e.preventDefault();
+  // a.href は相対リンクを tauri://localhost/... に解決してしまうので生の値を見る。
+  const url = externalUrl(a.getAttribute("href") ?? "");
+  // 外部 URL だけ OS の既定アプリ（ブラウザ / メーラー）に渡す。
+  // 相対リンクや #見出し は今のところ何もしない。
+  if (url) void withErrorNotice(t("openLinkFailed"), () => openUrl(url));
+});

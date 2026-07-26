@@ -43,6 +43,7 @@ const ja = {
   copyPathDone: "パスをコピーしました",
   copyPathFailed: "パスのコピーに失敗しました",
   openFolderFailed: "フォルダを開けませんでした",
+  openLinkFailed: "リンクを開けませんでした",
   newWindowFailed: "新しいウィンドウを開けませんでした",
 
   // 自動更新
@@ -126,6 +127,7 @@ const en: Record<MsgKey, string> = {
   copyPathDone: "Path copied",
   copyPathFailed: "Failed to copy the path",
   openFolderFailed: "Failed to open the folder",
+  openLinkFailed: "Failed to open the link",
   newWindowFailed: "Failed to open a new window",
 
   updateLabel: "Update",

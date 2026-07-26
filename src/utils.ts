@@ -5,6 +5,13 @@
 // 一覧に載せる Markdown ファイルか（ファイル名でもフルパスでも判定できる）。
 export const isMarkdownPath = (p: string): boolean => /\.md$/i.test(p);
 
+// プレビュー内リンクのうち、OS の既定アプリに渡してよい外部 URL だけを返す。
+// 相対リンク（./other.md）や #見出し、javascript: などは対象外で null。
+export const externalUrl = (href: string): string | null => {
+  const url = href.trim();
+  return /^(https?:\/\/|mailto:)/i.test(url) ? url : null;
+};
+
 // パス末尾のフォルダ/ファイル名を取り出す（Windows/Unix 両対応）。
 export const baseName = (p: string): string =>
   p

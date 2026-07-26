@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { baseName, dirName, isMarkdownPath, joinPath } from "./utils";
+import { baseName, dirName, externalUrl, isMarkdownPath, joinPath } from "./utils";
 
 describe("isMarkdownPath", () => {
   it("拡張子 .md を大文字小文字を問わず判定する", () => {
@@ -68,5 +68,30 @@ describe("joinPath", () => {
   it("dirName で戻したパスと往復できる", () => {
     const p = "C:\\Users\\daigo\\notes\\a.md";
     expect(joinPath(dirName(p), baseName(p))).toBe(p);
+  });
+});
+
+describe("externalUrl", () => {
+  it("http / https / mailto はそのまま返す", () => {
+    expect(externalUrl("https://example.com")).toBe("https://example.com");
+    expect(externalUrl("http://example.com/a?b=1#c")).toBe("http://example.com/a?b=1#c");
+    expect(externalUrl("mailto:test@example.com")).toBe("mailto:test@example.com");
+  });
+
+  it("スキームの大文字小文字は問わない", () => {
+    expect(externalUrl("HTTPS://EXAMPLE.COM")).toBe("HTTPS://EXAMPLE.COM");
+  });
+
+  it("前後の空白は落とす", () => {
+    expect(externalUrl("  https://example.com  ")).toBe("https://example.com");
+  });
+
+  it("外部 URL でないものは null", () => {
+    expect(externalUrl("./other.md")).toBe(null);
+    expect(externalUrl("other.md")).toBe(null);
+    expect(externalUrl("/abs/path.md")).toBe(null);
+    expect(externalUrl("#見出し")).toBe(null);
+    expect(externalUrl("javascript:alert(1)")).toBe(null);
+    expect(externalUrl("")).toBe(null);
   });
 });
