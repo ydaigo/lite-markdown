@@ -6,6 +6,8 @@ import {
   btnSidebar,
   btnTheme,
   btnToggle,
+  btnUpdate,
+  btnUpdateLabel,
   emptyEl,
   searchInputEl,
   winClose,
@@ -30,6 +32,7 @@ const TIPS: [HTMLElement, MsgKey, boolean?][] = [
   [btnSearch, "tipSearch"],
   [btnTheme, "tipTheme"],
   [btnToggle, "tipToggleMode"],
+  [btnUpdate, "tipUpdate"],
   [wsBtn, "tipWorkspace"],
   [btnNew, "tipNewNote"],
   [winMin, "tipMinimize", true],
@@ -46,6 +49,8 @@ function applyStaticText(): void {
   btnSettings.title = `${t("tipSettings")} (?)`;
 
   btnNewLabel.textContent = t("newNote");
+  // 更新中に切り替えた場合は進捗表示に戻る（次の進捗で上書きされる）。
+  btnUpdateLabel.textContent = t("updateLabel");
   searchInputEl.placeholder = t("searchPlaceholder");
   updateModeLabel();
   emptyEl.replaceChildren(t("emptyStateTitle"), document.createElement("br"), t("emptyStateHint"));

@@ -43,6 +43,15 @@ const ja = {
   openFolderFailed: "フォルダを開けませんでした",
   newWindowFailed: "新しいウィンドウを開けませんでした",
 
+  // 自動更新
+  updateLabel: "更新",
+  tipUpdate: "新しいバージョンがあります",
+  updateConfirm: "更新を適用しますか？",
+  updateRestartNote: "アプリはいったん終了し、自動的に再起動します。",
+  updateDownloading: "更新中",
+  updateAppliedNextLaunch: "更新しました。次回の起動から反映されます",
+  updateFailed: "更新に失敗しました",
+
   // 操作メニュー（メモ / ワークスペース）
   menuMore: "操作",
   menuOpenInNewWindow: "新規ウィンドウで開く",
@@ -112,6 +121,14 @@ const en: Record<MsgKey, string> = {
   copyPathFailed: "Failed to copy the path",
   openFolderFailed: "Failed to open the folder",
   newWindowFailed: "Failed to open a new window",
+
+  updateLabel: "Update",
+  tipUpdate: "A new version is available",
+  updateConfirm: "Apply this update?",
+  updateRestartNote: "The app will close and restart automatically.",
+  updateDownloading: "Updating",
+  updateAppliedNextLaunch: "Updated. It will take effect on the next launch",
+  updateFailed: "Failed to update",
 
   menuMore: "Actions",
   menuOpenInNewWindow: "Open in new window",

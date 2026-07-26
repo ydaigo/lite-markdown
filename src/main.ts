@@ -39,6 +39,7 @@ setTimeout(revealWindow, REVEAL_DEADLINE_MS);
 // メモ用のサブウィンドウでは行わない（権限もメインウィンドウにだけ与えている）。
 if (import.meta.env.VITE_UPDATER === "1" && isAutoUpdateEnabled() && isMainWindow()) {
   // 起動直後は避け、UI が落ち着いてから更新確認する。
+  // 確認するだけで、適用はタイトルバーのボタンを押したとき（updater.ts）。
   setTimeout(() => {
     void import("./updater").then((m) => m.checkForUpdates());
   }, UPDATE_CHECK_DELAY_MS);

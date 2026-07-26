@@ -68,6 +68,10 @@
         <div class="tb-spacer" data-tauri-drag-region></div>
 
         <div class="tb-right">
+          <!-- 新しいバージョンが見つかったときだけ updater.ts が表示する -->
+          <button id="btn-update" class="tb-btn tb-text" title="新しいバージョンがあります" hidden>
+            ⬆ <span id="btn-update-label">更新</span>
+          </button>
           <button id="btn-toggle" class="tb-btn tb-text" title="プレビュー切替 (Ctrl/Cmd+E)">プレビュー</button>
           <button id="btn-theme" class="tb-btn" title="テーマ切替">🌙</button>
           <div class="tb-winctrls">

@@ -20,6 +20,9 @@ export const btnSearch = $<HTMLButtonElement>("btn-search");
 export const btnSettings = $<HTMLButtonElement>("btn-settings");
 export const btnToggle = $<HTMLButtonElement>("btn-toggle");
 export const btnTheme = $<HTMLButtonElement>("btn-theme");
+// 更新が見つかるまで hidden。表示と操作は updater.ts が持つ。
+export const btnUpdate = $<HTMLButtonElement>("btn-update");
+export const btnUpdateLabel = $<HTMLSpanElement>("btn-update-label");
 export const winMin = $<HTMLButtonElement>("win-min");
 export const winMax = $<HTMLButtonElement>("win-max");
 export const winClose = $<HTMLButtonElement>("win-close");
