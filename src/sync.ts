@@ -1,6 +1,6 @@
 import { readTextFile, watch, type UnwatchFn, type WatchEvent } from "@tauri-apps/plugin-fs";
 import { state, notify } from "./store";
-import { getDoc, setDoc } from "./editor";
+import { adoptDoc, getDoc } from "./editor";
 import { listNoteStamps, refreshNotes } from "./notes";
 import { hasPendingSave } from "./autosave";
 import { renderPreview } from "./preview";
@@ -45,8 +45,11 @@ async function adoptCurrentNote(): Promise<void> {
   }
 
   const text = await readTextFile(path).catch(() => null);
-  if (text === null || text === getDoc()) return;
-  setDoc(text);
+  if (text === null) return;
+  // 読み込みを待っている間に入力・メモの切り替えが入っていたら取り込まない。
+  // 待つ前に一度見ているが、ここで見直さないと打ったばかりの入力を消してしまう。
+  if (hasPendingSave() || state.currentPath !== path || text === getDoc()) return;
+  adoptDoc(text);
   if (state.mode === "preview") renderPreview();
 }
 

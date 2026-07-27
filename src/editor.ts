@@ -160,12 +160,19 @@ export const getDoc = (): string => view.state.doc.toString();
 
 // プログラムから内容を差し替える（この間の変更では自動保存を走らせない）。
 // ディスクから読み込んだ地点でもあるので、変更検知の基準もここで揃える。
-export function setDoc(text: string): void {
+function replaceDoc(text: string, selection?: { anchor: number }): void {
   loading = true;
-  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, selection });
   loading = false;
   baseline = text;
 }
+
+export const setDoc = (text: string): void => replaceDoc(text);
+
+// 外部で書き換えられた内容を取り込む（sync.ts）。同じメモを開いたままなので
+// カーソルは残す。全文差し替えに任せると文末へ飛んでしまう。
+export const adoptDoc = (text: string): void =>
+  replaceDoc(text, { anchor: Math.min(view.state.selection.main.head, text.length) });
 
 // 基準から内容が変わっているか（＝書き出す必要があるか）。
 export const isDocDirty = (): boolean => view.state.doc.toString() !== baseline;
