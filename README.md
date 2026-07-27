@@ -47,6 +47,8 @@ Tauri v2 製の、ものすごく軽量な Markdown / メモアプリ（Windows 
 | `Ctrl/Cmd + F` | エディタ内検索 |
 | `Ctrl/Cmd + Shift + F` | メモ検索（一覧） |
 | `Ctrl/Cmd + H` | エディタ内 置換 |
+| `Tab` / `Shift + Tab` | インデント / 解除（空白 4 桁刻み。箇条書きの行では項目ごと 1 段） |
+| `Ctrl + M`（macOS は `Shift + Option + M`） | Tab をフォーカス移動に戻す（一時） |
 | `?` | 設定を開く |
 | `Esc` | 検索 / ダイアログを閉じる |
 

@@ -17,6 +17,8 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { keys: "Ctrl / Cmd + F", descKey: "scSearch" },
   { keys: "Ctrl / Cmd + Shift + F", descKey: "scSearchNotes" },
   { keys: "Ctrl / Cmd + H", descKey: "scReplace" },
+  { keys: "Tab / Shift + Tab", descKey: "scIndent" },
+  { keys: "Ctrl + M / Shift + Option + M", descKey: "scTabFocus" },
   { keys: "?", descKey: "scSettings" },
   { keys: "Esc", descKey: "scEscape" },
 ];

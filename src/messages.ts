@@ -95,6 +95,8 @@ const ja = {
   scSearch: "エディタ内検索",
   scSearchNotes: "メモ検索（一覧）",
   scReplace: "エディタ内 置換",
+  scIndent: "インデント / 解除",
+  scTabFocus: "Tab をフォーカス移動に戻す（一時）",
   scSettings: "設定を開く",
   scEscape: "検索 / ダイアログを閉じる",
 } as const;
@@ -174,6 +176,8 @@ const en: Record<MsgKey, string> = {
   scSearch: "Search in editor",
   scSearchNotes: "Search notes (list)",
   scReplace: "Replace in editor",
+  scIndent: "Indent / outdent",
+  scTabFocus: "Restore Tab as focus move (temporary)",
   scSettings: "Open settings",
   scEscape: "Close search / dialog",
 };

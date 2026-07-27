@@ -1,4 +1,4 @@
-import { EditorState, Compartment } from "@codemirror/state";
+import { EditorState, Compartment, Prec } from "@codemirror/state";
 import {
   EditorView,
   keymap,
@@ -9,9 +9,15 @@ import {
 import { search, searchKeymap, openSearchPanel } from "@codemirror/search";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
-import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from "@codemirror/language";
+import {
+  indentUnit,
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  HighlightStyle,
+} from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { editorEl } from "./dom";
+import { INDENT_SIZE, indentKeymap } from "./editor-indent";
 import { state } from "./store";
 import { t, getLang } from "./i18n";
 
@@ -115,6 +121,11 @@ const view = new EditorView({
       langCompartment.of(langExtensions()),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       syntaxHighlighting(mdHighlight),
+      // 行送り（indentMore / indentLess）の 1 段。Tab の刻みと揃える。
+      indentUnit.of(" ".repeat(INDENT_SIZE)),
+      EditorState.tabSize.of(INDENT_SIZE),
+      // markdown() が Prec.high で Backspace を握っているので、こちらを更に上に置く。
+      Prec.highest(keymap.of([...indentKeymap])),
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       themeCompartment.of(cmTheme()),
       EditorView.lineWrapping,
