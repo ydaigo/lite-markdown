@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { baseName, dirName, externalUrl, isMarkdownPath, joinPath } from "./utils";
+import {
+  baseName,
+  boundedCache,
+  diagramErrorLine,
+  dirName,
+  externalUrl,
+  isMarkdownPath,
+  joinPath,
+  mermaidThemeName,
+} from "./utils";
 
 describe("isMarkdownPath", () => {
   it("拡張子 .md を大文字小文字を問わず判定する", () => {
@@ -93,5 +102,58 @@ describe("externalUrl", () => {
     expect(externalUrl("#見出し")).toBe(null);
     expect(externalUrl("javascript:alert(1)")).toBe(null);
     expect(externalUrl("")).toBe(null);
+  });
+});
+
+describe("mermaidThemeName", () => {
+  it("dark はそのまま、それ以外は default", () => {
+    expect(mermaidThemeName("dark")).toBe("dark");
+    expect(mermaidThemeName("light")).toBe("default");
+  });
+});
+
+describe("diagramErrorLine", () => {
+  it("最初の空でない行だけを返す", () => {
+    const e = new Error("\nParse error on line 2:\ngraph TD  A --<> B\n---------^");
+    expect(diagramErrorLine(e)).toBe("Parse error on line 2:");
+  });
+
+  it("長い行は切り詰める", () => {
+    expect(diagramErrorLine(new Error("a".repeat(200)), 10)).toBe(`${"a".repeat(10)}…`);
+  });
+
+  it("Error 以外も文字列として扱う", () => {
+    expect(diagramErrorLine("こわれています")).toBe("こわれています");
+    expect(diagramErrorLine(undefined)).toBe("undefined");
+  });
+});
+
+describe("boundedCache", () => {
+  it("入れた値を引ける", () => {
+    const c = boundedCache<number>(2);
+    c.set("a", 1);
+    expect(c.get("a")).toBe(1);
+    expect(c.get("b")).toBe(undefined);
+  });
+
+  it("上限を超えたら古いものから捨てる", () => {
+    const c = boundedCache<number>(2);
+    c.set("a", 1);
+    c.set("b", 2);
+    c.set("c", 3);
+    expect(c.get("a")).toBe(undefined);
+    expect(c.get("b")).toBe(2);
+    expect(c.get("c")).toBe(3);
+  });
+
+  it("同じキーの再登録では件数が増えず、新しいものとして扱われる", () => {
+    const c = boundedCache<number>(2);
+    c.set("a", 1);
+    c.set("b", 2);
+    c.set("a", 9); // a が最新になるので、次に押し出されるのは b
+    c.set("c", 3);
+    expect(c.get("a")).toBe(9);
+    expect(c.get("b")).toBe(undefined);
+    expect(c.get("c")).toBe(3);
   });
 });

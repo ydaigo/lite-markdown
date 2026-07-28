@@ -52,5 +52,20 @@ export const MAC_TRAFFIC_LIGHT = { x: 14, y: 16 } as const;
 // リサイズは連続で届くため、落ち着いてから 1 回だけ Rust に問い合わせる。
 export const FULLSCREEN_SYNC_DEBOUNCE_MS = 120;
 
+// Mermaid 図の SVG を覚えておく上限（本数）。プレビューは切り替えるたびに全体を
+// 作り直すため、同じ図を何度も描き直さないよう結果をキャッシュする。
+export const DIAGRAM_CACHE_LIMIT = 64;
+
+// 図のズーム表示で許す倍率の範囲と、ボタン 1 回あたりの変化量。
+// pinch は連続的な操作（トラックパッドのピンチ / Cmd+スクロール）用の感度で、
+// 変化量 1 あたりの指数。1 イベントで飛びすぎないよう deltaY は clamp で抑える。
+export const DIAGRAM_ZOOM = {
+  min: 0.2,
+  max: 8,
+  step: 1.2,
+  pinch: 0.01,
+  pinchClamp: 40,
+} as const;
+
 // UI 文言は言語ごとに切り替わるため messages.ts に置く（t() 経由で取得）。
 // localStorage のキーは prefs.ts に置く（読み書きも同モジュールに閉じる）。

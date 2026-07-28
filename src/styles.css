@@ -653,6 +653,29 @@ body {
   padding: 0;
 }
 
+/* Mermaid 図。コードブロックの枠（--code-bg）は付けず、クリックで
+   ズーム表示を開くので押せることを見せる。 */
+#preview .mermaid-diagram {
+  margin: 1em 0;
+  text-align: center;
+  cursor: zoom-in;
+}
+
+/* mermaid は svg のインライン style に max-width（本来の大きさ）を入れる。
+   高さだけ自動にして、幅に合わせて縮むときの歪みを防ぐ。 */
+#preview .mermaid-diagram svg {
+  height: auto;
+}
+
+/* 構文エラーは書いている途中にも起きるので、コードブロックを残して 1 行添えるだけ。 */
+#preview .mermaid-error {
+  margin: 0.3em 0 1em;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 #preview blockquote {
   margin: 1em 0;
   padding: 0.2em 1em;
@@ -871,4 +894,75 @@ body {
 .set-check:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* ============================ 図のズーム表示 ============================ */
+/* 設定ダイアログ（#set-overlay, z-index: 100）より手前に出す。 */
+#dz-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: var(--bg);
+}
+.dz-stage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 拡大した図がはみ出しても、スクロールバーではなくドラッグで動かす。 */
+  overflow: hidden;
+  cursor: grab;
+}
+.dz-stage.dragging {
+  cursor: grabbing;
+}
+.dz-figure {
+  /* 拡大は幅（レイアウト）で行い、ここでは移動だけを transform で行う。
+     will-change: transform を付けると図が合成レイヤに載って元の大きさで
+     画像化され、拡大しても粗いままになるため付けない。 */
+  flex: 0 0 auto;
+  /* ドラッグ中に SVG の選択やゴースト画像が出ないようにする。 */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.dz-figure svg {
+  display: block;
+  /* 幅は入れ物（.dz-figure）に追従させる。実際の値は openDiagramZoom() が
+     インライン style で入れる（mermaid が付ける max-width を外すため）。 */
+  height: auto;
+}
+.dz-bar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--menu-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px var(--menu-shadow);
+}
+.dz-btn,
+.dz-pct {
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.dz-pct {
+  color: var(--muted);
+  /* 倍率が変わっても幅が動かないようにする。 */
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+}
+.dz-btn:hover,
+.dz-pct:hover {
+  background: var(--item-hover);
 }

@@ -78,6 +78,13 @@ const ja = {
   tipClose: "閉じる",
   searchPlaceholder: "メモを検索…",
 
+  // Mermaid 図
+  diagramFailed: "図を描けませんでした",
+  tipDiagramZoom: "クリックで拡大",
+  tipZoomIn: "拡大",
+  tipZoomOut: "縮小",
+  tipZoomReset: "等倍に戻す",
+
   // 設定ダイアログ
   settingsTitle: "設定",
   sectionLanguage: "言語",
@@ -160,6 +167,12 @@ const en: Record<MsgKey, string> = {
   tipMaximize: "Maximize",
   tipClose: "Close",
   searchPlaceholder: "Search notes…",
+
+  diagramFailed: "Failed to render the diagram",
+  tipDiagramZoom: "Click to zoom",
+  tipZoomIn: "Zoom in",
+  tipZoomOut: "Zoom out",
+  tipZoomReset: "Reset zoom",
 
   settingsTitle: "Settings",
   sectionLanguage: "Language",

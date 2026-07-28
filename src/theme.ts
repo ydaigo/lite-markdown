@@ -1,6 +1,7 @@
 import { state } from "./store";
 import { btnTheme } from "./dom";
 import { applyEditorTheme } from "./editor";
+import { renderPreview } from "./preview";
 import { writeTheme } from "./prefs";
 
 // ============================================================================
@@ -13,6 +14,10 @@ export function applyTheme(): void {
   document.documentElement.setAttribute("data-theme", state.theme);
   btnTheme.textContent = state.theme === "dark" ? "☀️" : "🌙";
   applyEditorTheme();
+  // Mermaid 図は色を SVG に焼き込むため CSS 変数では追随できない。プレビュー表示中
+  // なら描き直す（テーマ別にキャッシュしているので、戻す側は待ち時間なし）。
+  // 起動時は state.mode が "edit" なので main.ts からの呼び出しでは何も起きない。
+  if (state.mode === "preview") renderPreview();
 }
 
 export function toggleTheme(): void {

@@ -6,6 +6,8 @@ import { getDoc } from "./editor";
 import { withErrorNotice } from "./errors";
 import { externalUrl } from "./utils";
 import { t } from "./i18n";
+import { cancelDiagrams, renderDiagrams } from "./diagrams";
+import { openDiagramZoom } from "./diagram-zoom";
 
 // ============================================================================
 // プレビュー（Markdown → HTML）
@@ -33,6 +35,8 @@ export const prefetchRenderer = (): void => void loadRenderer();
 
 export function renderPreview(): void {
   const text = getDoc();
+  // 前回の図の描画は非同期で走っているので、本文を入れ替える前に打ち切る。
+  cancelDiagrams();
   if (text.trim() === "") {
     // 空メモをプレビューしたときに真っ白にならないようプレースホルダを表示。
     previewEl.innerHTML = `<p class="preview-empty">${t("emptyNote")}</p>`;
@@ -45,6 +49,7 @@ export function renderPreview(): void {
   }
   previewEl.innerHTML = renderer(text);
   resolveLocalImages();
+  renderDiagrams();
 }
 
 // プレビュー内のローカル画像（image/... の相対パス）を
@@ -65,6 +70,12 @@ function resolveLocalImages(): void {
 // 外部 URL かどうかに関わらず既定動作は必ず止める。
 // stopPropagation() はしない（document のクリックでメニューを閉じる処理を殺さない）。
 previewEl.addEventListener("click", (e) => {
+  // 図は本文幅に収めているので、クリックでズーム表示を開く。
+  const diagram = (e.target as HTMLElement).closest<HTMLElement>(".mermaid-diagram");
+  if (diagram?.dataset.svg) {
+    openDiagramZoom(diagram.dataset.svg);
+    return;
+  }
   const a = (e.target as HTMLElement).closest("a");
   if (!a) return;
   e.preventDefault();

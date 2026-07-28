@@ -28,6 +28,7 @@ import {
 import { insertPastedImage } from "./images";
 import { toggleSettings, closeSettings, settingsOpen } from "./settings";
 import { closeContextMenu } from "./context-menu";
+import { closeDiagramZoom, diagramZoomOpen } from "./diagram-zoom";
 
 // ============================================================================
 // イベント配線
@@ -91,6 +92,12 @@ const MOD_KEYS: Record<string, (e: KeyboardEvent) => void> = {
 
 // キーボードショートカット
 window.addEventListener("keydown", (e) => {
+  // 図のズーム表示が開いていれば Esc で閉じる。後から開いた方が手前にあるので
+  // 設定ダイアログより先に判定する。
+  if (e.key === "Escape" && diagramZoomOpen()) {
+    closeDiagramZoom();
+    return;
+  }
   // 設定ダイアログが開いていれば Esc で閉じる。
   if (e.key === "Escape" && settingsOpen()) {
     closeSettings();
