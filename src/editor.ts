@@ -9,13 +9,7 @@ import {
 import { search, searchKeymap, openSearchPanel } from "@codemirror/search";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
-import {
-  indentUnit,
-  syntaxHighlighting,
-  defaultHighlightStyle,
-  HighlightStyle,
-} from "@codemirror/language";
-import { tags } from "@lezer/highlight";
+import { indentUnit } from "@codemirror/language";
 import { editorEl } from "./dom";
 import { INDENT_SIZE, indentKeymap } from "./editor-indent";
 import { state } from "./store";
@@ -46,16 +40,6 @@ const lightTheme = EditorView.theme(
   },
   { dark: false },
 );
-
-const mdHighlight = HighlightStyle.define([
-  { tag: tags.heading, fontWeight: "bold", color: "#3b82f6" },
-  { tag: tags.strong, fontWeight: "bold" },
-  { tag: tags.emphasis, fontStyle: "italic" },
-  { tag: tags.link, color: "#0ea5e9", textDecoration: "underline" },
-  { tag: tags.monospace, color: "#e11d48" },
-  { tag: tags.quote, color: "#8b8b8b", fontStyle: "italic" },
-  { tag: tags.list, color: "#a855f7" },
-]);
 
 const cmTheme = () => (state.theme === "dark" ? darkTheme : lightTheme);
 
@@ -116,11 +100,13 @@ const view = new EditorView({
       lineNumbers(),
       history(),
       highlightActiveLine(),
+      // syntaxHighlighting は付けない。エディタは書く場所なので、見出しやリンクの
+      // 色分け・太字・斜体で地の文が分断されるのを避けてテーマの文字色 1 色で表示する
+      // （飾りが要るのはプレビュー側）。markdown() は構文解析とリスト継続・Backspace
+      // の挙動のために必要なので残す。
       markdown(),
       search({ top: true }),
       langCompartment.of(langExtensions()),
-      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-      syntaxHighlighting(mdHighlight),
       // 行送り（indentMore / indentLess）の 1 段。Tab の刻みと揃える。
       indentUnit.of(" ".repeat(INDENT_SIZE)),
       EditorState.tabSize.of(INDENT_SIZE),
