@@ -9,6 +9,10 @@ import {
   btnUpdate,
   btnUpdateLabel,
   emptyEl,
+  pvFindInput,
+  pvFindPrev,
+  pvFindNext,
+  pvFindClose,
   searchInputEl,
   winClose,
   winMax,
@@ -38,6 +42,9 @@ const TIPS: [HTMLElement, MsgKey, boolean?][] = [
   [winMin, "tipMinimize", true],
   [winMax, "tipMaximize", true],
   [winClose, "tipClose", true],
+  [pvFindPrev, "tipFindPrev", true],
+  [pvFindNext, "tipFindNext", true],
+  [pvFindClose, "tipClose", true],
 ];
 
 function applyStaticText(): void {
@@ -52,6 +59,7 @@ function applyStaticText(): void {
   // 更新中に切り替えた場合は進捗表示に戻る（次の進捗で上書きされる）。
   btnUpdateLabel.textContent = t("updateLabel");
   searchInputEl.placeholder = t("searchPlaceholder");
+  pvFindInput.placeholder = t("pvFindPlaceholder");
   updateModeLabel();
   emptyEl.replaceChildren(t("emptyStateTitle"), document.createElement("br"), t("emptyStateHint"));
 }

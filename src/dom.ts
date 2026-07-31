@@ -42,6 +42,14 @@ export const editorEl = $<HTMLDivElement>("editor");
 export const previewEl = $<HTMLElement>("preview");
 export const emptyEl = $<HTMLDivElement>("empty-state");
 
+// プレビュー内検索バー
+export const pvFindEl = $<HTMLDivElement>("pv-find");
+export const pvFindInput = $<HTMLInputElement>("pv-find-input");
+export const pvFindCount = $<HTMLSpanElement>("pv-find-count");
+export const pvFindPrev = $<HTMLButtonElement>("pv-find-prev");
+export const pvFindNext = $<HTMLButtonElement>("pv-find-next");
+export const pvFindClose = $<HTMLButtonElement>("pv-find-close");
+
 // ============================================================================
 // 要素の組み立て
 // ============================================================================

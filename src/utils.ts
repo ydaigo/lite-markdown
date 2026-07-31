@@ -30,6 +30,26 @@ export const diagramErrorLine = (e: unknown, limit = 120): string => {
   return line.length > limit ? `${line.slice(0, limit)}…` : line;
 };
 
+// 大文字小文字を無視して比べるための畳み込み。文字ごとに変換し、長さが変わる文字
+// （"İ".toLowerCase() は 2 文字になる）は元のまま残す。プレビュー内検索は変換後の
+// 位置をそのまま元の文字列の位置として使うため、長さが動くと対応が崩れる。
+const foldCase = (s: string): string =>
+  Array.from(s, (ch) => {
+    const lower = ch.toLowerCase();
+    return lower.length === ch.length ? lower : ch;
+  }).join("");
+
+// haystack に needle が現れる位置（先頭の添字）をすべて返す。大文字小文字は区別
+// しない。重なりは数えず見つけた長さだけ進める（"aaa" の中の "aa" は 1 件）。
+export function matchOffsets(haystack: string, needle: string): number[] {
+  if (needle === "") return [];
+  const hay = foldCase(haystack);
+  const pin = foldCase(needle);
+  const out: number[] = [];
+  for (let i = hay.indexOf(pin); i >= 0; i = hay.indexOf(pin, i + pin.length)) out.push(i);
+  return out;
+}
+
 // 挿入順で古いものから捨てる、上限付きのキャッシュ（Map は挿入順を保つ）。
 // メモを渡り歩いても伸び続けないように上限を設ける。
 // 並び直しは set のときだけで、get では動かさない（get に副作用を持たせない）。

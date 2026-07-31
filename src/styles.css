@@ -896,6 +896,80 @@ body {
   opacity: 0.5;
 }
 
+/* ============================ プレビュー内検索 ============================ */
+/* プレビュー（#editor-area 内、position: relative）の右上に重ねて出す。 */
+#pv-find {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  background: var(--menu-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px var(--menu-shadow);
+}
+
+#pv-find-input {
+  width: 180px;
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  outline: none;
+}
+
+#pv-find-input:focus {
+  border-color: var(--accent);
+}
+
+/* 打った語が本文に無いことを、入力欄の縁で知らせる。 */
+#pv-find-input.no-match {
+  border-color: #b91c1c;
+}
+
+#pv-find-count {
+  color: var(--muted);
+  font-size: 12px;
+  /* 件数が増えても幅が動かないようにする。 */
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.pv-find-btn {
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 7px;
+}
+
+.pv-find-btn:hover {
+  background: var(--item-hover);
+}
+
+/* 一致箇所の塗り。CSS Custom Highlight API の登録名は preview-search.ts と揃える。
+   ::highlight() で効くのは色・背景色・下線などに限られる（枠線は付けられない）。 */
+::highlight(pv-find) {
+  background-color: rgba(250, 204, 21, 0.35);
+}
+
+::highlight(pv-find-current) {
+  background-color: #facc15;
+  color: #1a1a1a;
+}
+
 /* ============================ 図のズーム表示 ============================ */
 /* 設定ダイアログ（#set-overlay, z-index: 100）より手前に出す。 */
 #dz-overlay {

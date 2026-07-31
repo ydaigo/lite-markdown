@@ -3,6 +3,7 @@ import { editorEl, emptyEl, previewEl, btnToggle, appEl, searchBarEl, searchInpu
 import { appWindow } from "./app-window";
 import { focusEditor, setDoc } from "./editor";
 import { renderPreview } from "./preview";
+import { closePreviewSearch } from "./preview-search";
 import { t } from "./i18n";
 
 // ============================================================================
@@ -15,6 +16,9 @@ export function setMode(next: Mode): void {
     editorEl.hidden = true;
     previewEl.hidden = false;
   } else {
+    // プレビュー内検索はプレビューを離れた時点で用済み（バーはプレビューの上に
+    // 重ねているので、閉じないとエディタの前に残ってしまう）。
+    closePreviewSearch();
     previewEl.hidden = true;
     editorEl.hidden = state.currentPath === null;
     if (state.currentPath !== null) focusEditor();

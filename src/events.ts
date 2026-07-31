@@ -29,6 +29,7 @@ import { insertPastedImage } from "./images";
 import { toggleSettings, closeSettings, settingsOpen } from "./settings";
 import { closeContextMenu } from "./context-menu";
 import { closeDiagramZoom, diagramZoomOpen } from "./diagram-zoom";
+import { closePreviewSearch, openPreviewSearch, previewSearchOpen } from "./preview-search";
 
 // ============================================================================
 // イベント配線
@@ -84,9 +85,10 @@ const MOD_KEYS: Record<string, (e: KeyboardEvent) => void> = {
   e: () => toggleMode(),
   h: () => openFindInEditor(true),
   f: (e) => {
-    // Shift 付きはメモ一覧の絞り込み。付いていなければ、メモを開いているときは
-    // エディタ内検索、開いていなければ一覧の絞り込み。
-    if (e.shiftKey || !openFindInEditor(false)) toggleSearch(true);
+    // Shift 付きはメモ一覧の絞り込み。付いていなければ、いま見ている側で探す
+    // （プレビューならプレビュー内検索、エディタならエディタ内検索）。
+    // メモを開いていなければ一覧の絞り込みへ落とす。
+    if (e.shiftKey || !openFindInCurrentView()) toggleSearch(true);
   },
 };
 
@@ -103,6 +105,12 @@ window.addEventListener("keydown", (e) => {
     closeSettings();
     return;
   }
+  // プレビュー内検索は入力欄自身でも Esc を見ているが、本文をクリックして
+  // フォーカスが外れた後でも閉じられるようにここでも受ける。
+  if (e.key === "Escape" && previewSearchOpen()) {
+    closePreviewSearch();
+    return;
+  }
   // 入力中でなければ「?」で設定ダイアログを開閉。
   if (e.key === "?" && !isTypingTarget(e.target)) {
     e.preventDefault();
@@ -116,6 +124,15 @@ window.addEventListener("keydown", (e) => {
   e.preventDefault();
   run(e);
 });
+
+// いま見ている側で検索を開く。メモを開いていないときは false を返す。
+// プレビュー内検索が使えない環境（CSS Custom Highlight API 非対応）では、
+// 従来どおり編集モードへ戻してエディタ内検索を開く。
+function openFindInCurrentView(): boolean {
+  if (!state.currentPath) return false;
+  if (state.mode === "preview" && openPreviewSearch()) return true;
+  return openFindInEditor(false);
+}
 
 // エディタ内の検索パネルを開く。withReplace で置換の行を出すか決める。
 // プレビュー中は編集モードへ戻す。メモを開いていないときは何もせず false を返す。

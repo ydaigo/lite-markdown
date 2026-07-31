@@ -78,6 +78,11 @@ const ja = {
   tipClose: "閉じる",
   searchPlaceholder: "メモを検索…",
 
+  // プレビュー内検索（index.html の静的ラベル）
+  pvFindPlaceholder: "プレビュー内を検索…",
+  tipFindPrev: "前へ (Shift+Enter)",
+  tipFindNext: "次へ (Enter)",
+
   // Mermaid 図
   diagramFailed: "図を描けませんでした",
   tipDiagramZoom: "クリックで拡大",
@@ -99,7 +104,7 @@ const ja = {
   scNewNote: "新規メモ",
   scToggleSidebar: "サイドバー表示切替",
   scToggleMode: "編集 / プレビュー切替",
-  scSearch: "エディタ内検索",
+  scSearch: "エディタ / プレビュー内検索",
   scSearchNotes: "メモ検索（一覧）",
   scReplace: "エディタ内 置換",
   scIndent: "インデント / 解除",
@@ -168,6 +173,10 @@ const en: Record<MsgKey, string> = {
   tipClose: "Close",
   searchPlaceholder: "Search notes…",
 
+  pvFindPlaceholder: "Find in preview…",
+  tipFindPrev: "Previous (Shift+Enter)",
+  tipFindNext: "Next (Enter)",
+
   diagramFailed: "Failed to render the diagram",
   tipDiagramZoom: "Click to zoom",
   tipZoomIn: "Zoom in",
@@ -186,7 +195,7 @@ const en: Record<MsgKey, string> = {
   scNewNote: "New note",
   scToggleSidebar: "Toggle sidebar",
   scToggleMode: "Toggle editor / preview",
-  scSearch: "Search in editor",
+  scSearch: "Search in editor / preview",
   scSearchNotes: "Search notes (list)",
   scReplace: "Replace in editor",
   scIndent: "Indent / outdent",

@@ -119,6 +119,14 @@
           <main id="editor-area">
             <div id="editor"></div>
             <article id="preview" hidden></article>
+            <!-- プレビュー内検索。プレビューの上に重ねて出す（開閉は preview-search.ts） -->
+            <div id="pv-find" hidden>
+              <input id="pv-find-input" type="text" placeholder="プレビュー内を検索…" spellcheck="false" />
+              <span id="pv-find-count">0/0</span>
+              <button id="pv-find-prev" class="pv-find-btn" title="前へ">‹</button>
+              <button id="pv-find-next" class="pv-find-btn" title="次へ">›</button>
+              <button id="pv-find-close" class="pv-find-btn" title="閉じる">✕</button>
+            </div>
             <div id="empty-state" hidden>メモがありません。<br />「＋ 新規メモ」で始めましょう。</div>
           </main>
         </div>

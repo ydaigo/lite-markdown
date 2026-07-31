@@ -7,6 +7,7 @@ import {
   externalUrl,
   isMarkdownPath,
   joinPath,
+  matchOffsets,
   mermaidThemeName,
 } from "./utils";
 
@@ -155,5 +156,41 @@ describe("boundedCache", () => {
     expect(c.get("a")).toBe(9);
     expect(c.get("b")).toBe(undefined);
     expect(c.get("c")).toBe(3);
+  });
+});
+
+describe("matchOffsets", () => {
+  it("現れた位置をすべて返す", () => {
+    expect(matchOffsets("abcabc", "bc")).toEqual([1, 4]);
+  });
+
+  it("大文字小文字を区別しない", () => {
+    expect(matchOffsets("Markdown MARKDOWN markdown", "markdown")).toEqual([0, 9, 18]);
+  });
+
+  it("重なりは数えず、見つけた長さだけ進める", () => {
+    expect(matchOffsets("aaaa", "aa")).toEqual([0, 2]);
+  });
+
+  it("空の検索語は 0 件", () => {
+    expect(matchOffsets("abc", "")).toEqual([]);
+  });
+
+  it("見つからなければ 0 件", () => {
+    expect(matchOffsets("abc", "xyz")).toEqual([]);
+  });
+
+  it("日本語も位置で返す", () => {
+    expect(matchOffsets("メモを検索するメモ", "メモ")).toEqual([0, 7]);
+  });
+
+  it("小文字化で長さが変わる文字があっても位置がずれない", () => {
+    // "İ".toLowerCase() は 2 文字になるため、そのまま畳み込むと以降がずれる。
+    const text = `Aİ${"B"}`;
+    expect(matchOffsets(text, "b")).toEqual([2]);
+  });
+
+  it("サロゲートペアを含んでも元の文字列の位置で返す", () => {
+    expect(matchOffsets("🙂abc", "abc")).toEqual([2]);
   });
 });

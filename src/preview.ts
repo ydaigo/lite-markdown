@@ -8,6 +8,7 @@ import { externalUrl } from "./utils";
 import { t } from "./i18n";
 import { cancelDiagrams, renderDiagrams } from "./diagrams";
 import { openDiagramZoom } from "./diagram-zoom";
+import { refreshPreviewSearch } from "./preview-search";
 
 // ============================================================================
 // プレビュー（Markdown → HTML）
@@ -40,6 +41,7 @@ export function renderPreview(): void {
   if (text.trim() === "") {
     // 空メモをプレビューしたときに真っ白にならないようプレースホルダを表示。
     previewEl.innerHTML = `<p class="preview-empty">${t("emptyNote")}</p>`;
+    refreshPreviewSearch();
     return;
   }
   if (!renderer) {
@@ -50,6 +52,8 @@ export function renderPreview(): void {
   previewEl.innerHTML = renderer(text);
   resolveLocalImages();
   renderDiagrams();
+  // 本文を入れ替えると検索の Range は無効になるので、開いていれば引き直す。
+  refreshPreviewSearch();
 }
 
 // プレビュー内のローカル画像（image/... の相対パス）を
