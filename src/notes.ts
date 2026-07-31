@@ -1,7 +1,7 @@
 import { readDir, readTextFile, writeTextFile, remove } from "@tauri-apps/plugin-fs";
 import { ask } from "@tauri-apps/plugin-dialog";
 import type { NoteMeta } from "./store";
-import { state, notify, sortNotes, removeNote } from "./store";
+import { state, notify, sortNotes, removeNote, findNoteByName } from "./store";
 import { emptyEl } from "./dom";
 import { getDoc, setDoc } from "./editor";
 import { flushSave, cancelScheduledSave } from "./autosave";
@@ -10,7 +10,7 @@ import { deriveMeta } from "./meta";
 import { statMtime } from "./fs-utils";
 import { writeLastNote } from "./prefs";
 import { unpin, topNote } from "./pins";
-import { withErrorNotice } from "./errors";
+import { withErrorNotice, showToast } from "./errors";
 import { isMarkdownPath, joinPath } from "./utils";
 import { t } from "./i18n";
 
@@ -122,6 +122,18 @@ export async function selectNote(path: string): Promise<void> {
     return;
   }
   showNote(path, text);
+}
+
+// ファイル名（例: note-1784965179337.md）でメモを開く。プレビュー内リンクの入口。
+// selectNote は絶対パス前提で、読めなかったときも黙って留まるため、必ず一覧から
+// 実際のパスに解決してから渡す。見つからないことは利用者へ知らせる。
+export function openNoteByName(name: string): void {
+  const note = findNoteByName(name);
+  if (!note) {
+    showToast(t("noteLinkMissing"));
+    return;
+  }
+  void selectNote(note.path);
 }
 
 export async function newNote(): Promise<void> {

@@ -1,4 +1,5 @@
 import { readTheme } from "./prefs";
+import { baseName } from "./utils";
 
 // ============================================================================
 // アプリ状態と、状態変更を購読者へ通知する軽量ストア
@@ -52,6 +53,16 @@ export const sortNotes = (): void => {
 
 export const findNote = (path: string | null): NoteMeta | undefined =>
   state.notes.find((n) => n.path === path);
+
+// プレビュー内のリンクからの解決用。メモはワークスペース直下のフラット構成なので
+// ファイル名だけで一意に決まる。大文字小文字の違いは、macOS / Windows のファイル
+// システムが区別しないことに合わせて 2 段目で拾う。
+export const findNoteByName = (name: string): NoteMeta | undefined => {
+  const exact = state.notes.find((n) => baseName(n.path) === name);
+  if (exact) return exact;
+  const lower = name.toLowerCase();
+  return state.notes.find((n) => baseName(n.path).toLowerCase() === lower);
+};
 
 export const removeNote = (path: string): void => {
   state.notes = state.notes.filter((n) => n.path !== path);

@@ -14,7 +14,8 @@ import {
   wsBtn,
 } from "./dom";
 import { state, notify } from "./store";
-import { newNote } from "./notes";
+import { newNote, openNoteByName } from "./notes";
+import { setNoteLinkHandler } from "./preview";
 import { flushSave, scheduleSave } from "./autosave";
 import { setMode, toggleMode, toggleSearch, toggleSidebar } from "./view-modes";
 import { toggleTheme } from "./theme";
@@ -38,6 +39,7 @@ import { closePreviewSearch, openPreviewSearch, previewSearchOpen } from "./prev
 // エディタ由来のイベントに処理を接続（循環参照回避のためここで配線）。
 setDocChangeHandler(scheduleSave);
 setImagePasteHandler(insertPastedImage);
+setNoteLinkHandler(openNoteByName);
 
 btnNew.addEventListener("click", () => void newNote());
 wsBtn.addEventListener("click", (e) => {

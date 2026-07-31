@@ -4,11 +4,14 @@ import {
   boundedCache,
   diagramErrorLine,
   dirName,
+  escapeHtml,
   externalUrl,
   isMarkdownPath,
   joinPath,
   matchOffsets,
   mermaidThemeName,
+  noteFileName,
+  relativeNoteName,
 } from "./utils";
 
 describe("isMarkdownPath", () => {
@@ -192,5 +195,94 @@ describe("matchOffsets", () => {
 
   it("サロゲートペアを含んでも元の文字列の位置で返す", () => {
     expect(matchOffsets("🙂abc", "abc")).toEqual([2]);
+  });
+});
+
+describe("noteFileName", () => {
+  it("拡張子が無ければ .md を補う", () => {
+    expect(noteFileName("note-1784965179337")).toBe("note-1784965179337.md");
+  });
+
+  it("日本語のファイル名も扱える", () => {
+    expect(noteFileName("20260727-ネットワーク経路の使い分け")).toBe(
+      "20260727-ネットワーク経路の使い分け.md",
+    );
+  });
+
+  it("すでに .md なら二重に付けない（大小問わず）", () => {
+    expect(noteFileName("foo.md")).toBe("foo.md");
+    expect(noteFileName("foo.MD")).toBe("foo.MD");
+  });
+
+  it("末尾以外のドットは拡張子として扱わない", () => {
+    expect(noteFileName("v1.2 の設計")).toBe("v1.2 の設計.md");
+  });
+
+  it("先頭の ./ と前後の空白は落とす", () => {
+    expect(noteFileName("./foo")).toBe("foo.md");
+    expect(noteFileName("  foo  ")).toBe("foo.md");
+  });
+
+  it("末尾の #断片 は落とす", () => {
+    expect(noteFileName("foo#見出し")).toBe("foo.md");
+    expect(noteFileName("foo.md#見出し")).toBe("foo.md");
+  });
+
+  it("区切りを含むもの・親・空は null（フラット構成なので開けない）", () => {
+    expect(noteFileName("../foo")).toBe(null);
+    expect(noteFileName("sub/foo")).toBe(null);
+    expect(noteFileName("/abs/foo")).toBe(null);
+    expect(noteFileName("C:\\foo")).toBe(null);
+    expect(noteFileName("..")).toBe(null);
+    expect(noteFileName(".")).toBe(null);
+    expect(noteFileName("")).toBe(null);
+    expect(noteFileName("   ")).toBe(null);
+    expect(noteFileName("#見出し")).toBe(null);
+  });
+});
+
+describe("relativeNoteName", () => {
+  it("同じフォルダの .md ならファイル名を返す", () => {
+    expect(relativeNoteName("foo.md")).toBe("foo.md");
+    expect(relativeNoteName("./foo.md")).toBe("foo.md");
+  });
+
+  it("marked が encodeURI した href をデコードする", () => {
+    expect(relativeNoteName("%E3%83%8D%E3%83%83%E3%83%88.md")).toBe("ネット.md");
+  });
+
+  it("不正なパーセントがあっても例外にせず生の文字列で扱う", () => {
+    expect(relativeNoteName("100%達成.md")).toBe("100%達成.md");
+  });
+
+  it("クエリと断片は落とす", () => {
+    expect(relativeNoteName("foo.md?x=1#h")).toBe("foo.md");
+  });
+
+  it("外部 URL・#見出し・.md 以外・サブフォルダは null", () => {
+    expect(relativeNoteName("https://example.com/a.md")).toBe(null);
+    expect(relativeNoteName("mailto:test@example.com")).toBe(null);
+    expect(relativeNoteName("#見出し")).toBe(null);
+    expect(relativeNoteName("image/img-1.png")).toBe(null);
+    expect(relativeNoteName("../other/foo.md")).toBe(null);
+    expect(relativeNoteName("")).toBe(null);
+  });
+});
+
+describe("escapeHtml", () => {
+  it("HTML で意味を持つ 5 文字を実体参照にする", () => {
+    expect(escapeHtml("&")).toBe("&amp;");
+    expect(escapeHtml("<")).toBe("&lt;");
+    expect(escapeHtml(">")).toBe("&gt;");
+    expect(escapeHtml('"')).toBe("&quot;");
+    expect(escapeHtml("'")).toBe("&#39;");
+  });
+
+  it("複合しても & を二重にエスケープしない", () => {
+    expect(escapeHtml('a & <b "c">')).toBe("a &amp; &lt;b &quot;c&quot;&gt;");
+  });
+
+  it("日本語はそのまま", () => {
+    expect(escapeHtml("メモ 20260727")).toBe("メモ 20260727");
   });
 });

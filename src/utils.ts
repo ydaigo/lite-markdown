@@ -12,6 +12,44 @@ export const externalUrl = (href: string): string | null => {
   return /^(https?:\/\/|mailto:)/i.test(url) ? url : null;
 };
 
+// [[メモ名]] の中身を、ワークスペース内のファイル名へ正規化する。
+// メモはワークスペース直下のフラット構成なので、区切りを含むもの（サブフォルダ・親）は
+// 受け付けない。拡張子が無ければ .md を補う。開けない書き方は null（リンクにしない）。
+export const noteFileName = (target: string): string | null => {
+  // 末尾の #断片 は落とす（見出しへのアンカーは今のところ扱わない）。
+  const name = target.trim().replace(/^\.\//, "").replace(/#.*$/, "").trim();
+  if (name === "" || name === "." || name === "..") return null;
+  if (/[\\/]/.test(name)) return null;
+  return isMarkdownPath(name) ? name : `${name}.md`;
+};
+
+// 標準の相対リンク（[text](foo.md)）の href が、同じフォルダの .md を指していれば
+// そのファイル名を返す。marked は href を encodeURI して出すのでデコードしてから見る。
+export const relativeNoteName = (href: string): string | null => {
+  const raw = href.trim();
+  if (raw === "" || raw.startsWith("#") || externalUrl(raw) !== null) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    // "100%達成.md" のように % の後ろが 16 進 2 桁でないと URIError になる。
+    // エンコードされていなかっただけなので、生の文字列で続ける。
+    decoded = raw;
+  }
+  // クエリと断片を落としてから .md かどうかを見る（image/img-1.png を横取りしない）。
+  const path = decoded.replace(/[?#].*$/, "");
+  return isMarkdownPath(path) ? noteFileName(path) : null;
+};
+
+// HTML の属性値・本文へ差し込む文字列のエスケープ。
+export const escapeHtml = (s: string): string =>
+  s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 // Mermaid のテーマ名。state.theme（light/dark）から素直に対応させる。
 // 引数に Theme 型を使わないのは意図的。store.ts は読み込み時に window.matchMedia を
 // 触るため node 環境のテストから import できず、ここが巻き込まれてしまう。

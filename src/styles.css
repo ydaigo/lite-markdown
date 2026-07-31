@@ -633,6 +633,12 @@ body {
   color: var(--accent);
 }
 
+/* リンク先のメモが今は無い状態。押しても開けないことを色と下線で見せる。 */
+#preview a.note-link.missing {
+  color: var(--muted);
+  text-decoration-style: dotted;
+}
+
 #preview code {
   background: var(--code-bg);
   padding: 0.15em 0.4em;
