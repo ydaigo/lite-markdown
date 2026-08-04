@@ -15,6 +15,7 @@ const KEY = {
   autoUpdate: "lm.autoUpdate",
   lastNote: "lm.lastNote",
   pinned: "lm.pinned",
+  previewWidth: "lm.previewWidth",
 } as const;
 
 // ============================================================================
@@ -36,6 +37,22 @@ export const isAutoUpdateEnabled = (): boolean => localStorage.getItem(KEY.autoU
 
 export const writeAutoUpdateEnabled = (on: boolean): void =>
   localStorage.setItem(KEY.autoUpdate, on ? "1" : "0");
+
+// ============================================================================
+// プレビュー本文の横幅(px)
+// ============================================================================
+// 数値を持つ唯一の設定。読む側では「数として成立するか」だけ見て、駄目なら未保存と
+// 同じ null を返す（Number("") は 0 になるので isFinite だけでは足りない）。
+// 範囲として妥当かの判断は呼び出し側（utils.ts の clampPreviewWidth）。
+export const readPreviewWidth = (): number | null => {
+  const raw = localStorage.getItem(KEY.previewWidth);
+  if (raw === null) return null;
+  const px = Number(raw);
+  return Number.isFinite(px) && px > 0 ? px : null;
+};
+
+export const writePreviewWidth = (px: number): void =>
+  localStorage.setItem(KEY.previewWidth, String(Math.round(px)));
 
 // ============================================================================
 // ワークスペース

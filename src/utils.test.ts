@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   baseName,
   boundedCache,
+  clampPreviewWidth,
   diagramErrorLine,
   dirName,
   escapeHtml,
@@ -284,5 +285,26 @@ describe("escapeHtml", () => {
 
   it("日本語はそのまま", () => {
     expect(escapeHtml("メモ 20260727")).toBe("メモ 20260727");
+  });
+});
+
+describe("clampPreviewWidth", () => {
+  it("下限より狭い値は下限に丸める", () => {
+    expect(clampPreviewWidth(100, 1200)).toBe(360);
+    expect(clampPreviewWidth(0, 1200)).toBe(360);
+    expect(clampPreviewWidth(-500, 1200)).toBe(360);
+  });
+
+  it("入れ物より広い値は、つまみの余白を残した幅で止まる", () => {
+    expect(clampPreviewWidth(2000, 1200)).toBe(1176); // 1200 - 12 * 2
+  });
+
+  it("下限と上限の間はそのまま返す", () => {
+    expect(clampPreviewWidth(900, 1200)).toBe(900);
+  });
+
+  it("入れ物が下限より狭くても下限を返す（上限と下限が反転しない）", () => {
+    expect(clampPreviewWidth(800, 200)).toBe(360);
+    expect(clampPreviewWidth(100, 200)).toBe(360);
   });
 });

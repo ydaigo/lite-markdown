@@ -13,6 +13,7 @@ import {
   pvFindPrev,
   pvFindNext,
   pvFindClose,
+  pvResizeHandle,
   searchInputEl,
   winClose,
   winMax,
@@ -45,6 +46,7 @@ const TIPS: [HTMLElement, MsgKey, boolean?][] = [
   [pvFindPrev, "tipFindPrev", true],
   [pvFindNext, "tipFindNext", true],
   [pvFindClose, "tipClose", true],
+  [pvResizeHandle, "tipPreviewWidth", true],
 ];
 
 function applyStaticText(): void {

@@ -84,6 +84,9 @@ const ja = {
   tipFindPrev: "前へ (Shift+Enter)",
   tipFindNext: "次へ (Enter)",
 
+  // プレビュー本文の幅
+  tipPreviewWidth: "ドラッグで本文の幅を変更（ダブルクリックで既定に戻す）",
+
   // Mermaid 図
   diagramFailed: "図を描けませんでした",
   tipDiagramZoom: "クリックで拡大",
@@ -178,6 +181,8 @@ const en: Record<MsgKey, string> = {
   pvFindPlaceholder: "Find in preview…",
   tipFindPrev: "Previous (Shift+Enter)",
   tipFindNext: "Next (Enter)",
+
+  tipPreviewWidth: "Drag to resize the text width (double-click to reset)",
 
   diagramFailed: "Failed to render the diagram",
   tipDiagramZoom: "Click to zoom",

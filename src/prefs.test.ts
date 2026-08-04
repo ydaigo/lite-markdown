@@ -8,6 +8,8 @@ import {
   writeWorkspaces,
   readTheme,
   writeTheme,
+  readPreviewWidth,
+  writePreviewWidth,
 } from "./prefs";
 
 // node 環境には localStorage が無いため、テストごとに空のモックへ差し替える。
@@ -60,5 +62,26 @@ describe("prefs", () => {
     writeLastNote("/ws1", "/ws1/c.md");
     expect(readLastNote("/ws1")).toBe("/ws1/c.md");
     expect(readLastNote("/ws2")).toBe("/ws2/b.md");
+  });
+
+  it("未保存のプレビュー幅は null で、round-trip できる", () => {
+    expect(readPreviewWidth()).toBeNull();
+    writePreviewWidth(1024);
+    expect(readPreviewWidth()).toBe(1024);
+  });
+
+  it("プレビュー幅は整数に丸めて保存する", () => {
+    writePreviewWidth(860.6);
+    expect(readPreviewWidth()).toBe(861);
+  });
+
+  it("数として読めないプレビュー幅は未保存と同じ扱い", () => {
+    localStorage.setItem("lm.previewWidth", "abc");
+    expect(readPreviewWidth()).toBeNull();
+    // Number("") は 0 になるので、0 以下も弾いていることを確かめる。
+    localStorage.setItem("lm.previewWidth", "");
+    expect(readPreviewWidth()).toBeNull();
+    localStorage.setItem("lm.previewWidth", "-100");
+    expect(readPreviewWidth()).toBeNull();
   });
 });

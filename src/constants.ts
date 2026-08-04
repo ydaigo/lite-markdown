@@ -67,5 +67,12 @@ export const DIAGRAM_ZOOM = {
   pinchClamp: 40,
 } as const;
 
+// プレビュー本文の横幅(px)。右端のドラッグで変えられ、値は prefs.ts が覚える。
+// default は初期値で、つまみのダブルクリックで戻す先でもある。min は padding
+// （左右 32px）込みの下限で、これ以下だと本文が 300px を切って表が壊れる。
+// 上限は入れ物（#editor-area）の実幅なので定数には持たない。gutter はつまみを
+// 置く左右の余白で、本文が入れ物いっぱいに広がってつまみが画面外へ出るのを防ぐ。
+export const PREVIEW_WIDTH = { default: 860, min: 360, gutter: 12 } as const;
+
 // UI 文言は言語ごとに切り替わるため messages.ts に置く（t() 経由で取得）。
 // localStorage のキーは prefs.ts に置く（読み書きも同モジュールに閉じる）。

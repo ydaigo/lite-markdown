@@ -2,6 +2,7 @@ import "./styles.css";
 import "./events"; // 副作用: DOM イベントの配線と購読の登録
 import { registerGlobalErrorHandlers } from "./errors";
 import { applyTheme } from "./theme";
+import { applyPreviewWidth } from "./preview-width";
 import { applyLanguage } from "./localize";
 import { isAutoUpdateEnabled } from "./prefs";
 import { initWorkspace } from "./workspace";
@@ -20,6 +21,8 @@ registerGlobalErrorHandlers();
 async function init(): Promise<void> {
   applyPlatform();
   applyTheme();
+  // 保存済みの本文幅を先に入れておく（初回プレビューで幅が跳ねないように）。
+  applyPreviewWidth();
   applyLanguage();
   // ワークスペースの監視は setWorkspace が張るので、ここでは復帰時の確認だけ足す。
   await initWorkspace();

@@ -610,9 +610,64 @@ body {
   height: 100%;
   overflow: auto;
   padding: 24px 32px;
-  max-width: 860px;
+  /* 幅は --preview-w（preview-width.ts が起動時に入れる）。ここの 860px は保険で、
+     既定値の持ち主は constants.ts の PREVIEW_WIDTH.default。
+     calc(100% - 24px) はつまみを置く左右の余白（PREVIEW_WIDTH.gutter × 2）。 */
+  max-width: min(var(--preview-w, 860px), calc(100% - 24px));
   margin: 0 auto;
   line-height: 1.7;
+}
+
+/* 幅を変えるつまみの位置決め。#preview と同じ幅の式を与えるので、頭打ちの掛かり方まで
+   一致する（ウィンドウのリサイズやサイドバー開閉に JS の追従処理が要らない）。 */
+#pv-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--preview-w, 860px);
+  max-width: calc(100% - 24px);
+  pointer-events: none; /* 帯そのものは本文のクリックを奪わない */
+  z-index: 15; /* #pv-find(20) より奥 */
+}
+
+/* 掴めるのはこの 12px だけ。本文の箱の外（余白側）に置く。内側だと Windows の
+   スクロールバー（#preview は overflow:auto なので枠内に出る）と重なってしまう。 */
+#pv-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: 12px;
+  pointer-events: auto;
+  cursor: col-resize;
+}
+
+/* 普段は見えず、hover で細い線、ドラッグ中だけ強調する。 */
+#pv-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+}
+
+#pv-resize-handle:hover::before {
+  background: var(--border);
+}
+
+#app.pv-resizing #pv-resize-handle::before {
+  background: var(--accent);
+}
+
+/* ドラッグ中は画面のどこにいても列幅変更のカーソルにし、本文を選択させない。 */
+#app.pv-resizing {
+  cursor: col-resize;
+  user-select: none;
 }
 
 #preview h1,

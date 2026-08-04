@@ -4,6 +4,7 @@ import { appWindow } from "./app-window";
 import { focusEditor, setDoc } from "./editor";
 import { renderPreview } from "./preview";
 import { closePreviewSearch } from "./preview-search";
+import { setPreviewResizerVisible } from "./preview-width";
 import { t } from "./i18n";
 
 // ============================================================================
@@ -15,10 +16,13 @@ export function setMode(next: Mode): void {
     renderPreview();
     editorEl.hidden = true;
     previewEl.hidden = false;
+    // メモが無いときはプレースホルダだけなので、幅を変えるつまみは出さない。
+    setPreviewResizerVisible(state.currentPath !== null);
   } else {
-    // プレビュー内検索はプレビューを離れた時点で用済み（バーはプレビューの上に
-    // 重ねているので、閉じないとエディタの前に残ってしまう）。
+    // プレビュー内検索と幅のつまみはプレビューを離れた時点で用済み（どちらも
+    // プレビューの上に重ねているので、消さないとエディタの前に残ってしまう）。
     closePreviewSearch();
+    setPreviewResizerVisible(false);
     previewEl.hidden = true;
     editorEl.hidden = state.currentPath === null;
     if (state.currentPath !== null) focusEditor();
@@ -38,6 +42,9 @@ export function showEmptyState(): void {
   setDoc("");
   editorEl.hidden = true;
   emptyEl.hidden = false;
+  // プレビュー中に開いていたメモが消えた場合（削除・外部での削除）に、
+  // 幅のつまみだけが残らないようにする。
+  setPreviewResizerVisible(false);
 }
 
 // ============================================================================

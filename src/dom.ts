@@ -38,9 +38,14 @@ export const btnNewLabel = $<HTMLSpanElement>("btn-new-label");
 export const listEl = $<HTMLDivElement>("note-list");
 
 // 本文エリア
+export const editorAreaEl = $<HTMLElement>("editor-area");
 export const editorEl = $<HTMLDivElement>("editor");
 export const previewEl = $<HTMLElement>("preview");
 export const emptyEl = $<HTMLDivElement>("empty-state");
+
+// プレビュー本文の幅を変えるつまみ
+export const pvResizeEl = $<HTMLDivElement>("pv-resize");
+export const pvResizeHandle = $<HTMLDivElement>("pv-resize-handle");
 
 // プレビュー内検索バー
 export const pvFindEl = $<HTMLDivElement>("pv-find");

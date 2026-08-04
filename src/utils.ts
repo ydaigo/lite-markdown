@@ -1,3 +1,5 @@
+import { PREVIEW_WIDTH } from "./constants";
+
 // ============================================================================
 // 汎用の純粋関数ヘルパ
 // ============================================================================
@@ -49,6 +51,15 @@ export const escapeHtml = (s: string): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+
+// プレビュー本文の幅を、読める下限と入れ物の実幅の間へ収める。
+// 上限を CSS の max-width だけに任せると「入れ物より広い保存値」が作れてしまい、
+// 戻す向きへドラッグしても見た目が動かない不感帯ができるので、保存する値も同じ
+// ところで止める。入れ物が下限より狭いときは下限を返す（上限と下限が反転しない）。
+export const clampPreviewWidth = (px: number, available: number): number => {
+  const max = Math.max(PREVIEW_WIDTH.min, available - PREVIEW_WIDTH.gutter * 2);
+  return Math.min(Math.max(px, PREVIEW_WIDTH.min), max);
+};
 
 // Mermaid のテーマ名。state.theme（light/dark）から素直に対応させる。
 // 引数に Theme 型を使わないのは意図的。store.ts は読み込み時に window.matchMedia を

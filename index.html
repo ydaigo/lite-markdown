@@ -119,6 +119,11 @@
           <main id="editor-area">
             <div id="editor"></div>
             <article id="preview" hidden></article>
+            <!-- 本文幅を変えるつまみ。位置決めの入れ物は #preview と同じ幅の式で置き、
+                 その外側（余白側）につまみを重ねる（幅の反映と操作は preview-width.ts） -->
+            <div id="pv-resize" hidden>
+              <div id="pv-resize-handle" role="separator" aria-orientation="vertical"></div>
+            </div>
             <!-- プレビュー内検索。プレビューの上に重ねて出す（開閉は preview-search.ts） -->
             <div id="pv-find" hidden>
               <input id="pv-find-input" type="text" placeholder="プレビュー内を検索…" spellcheck="false" />
