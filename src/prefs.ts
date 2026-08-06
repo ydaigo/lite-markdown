@@ -16,6 +16,7 @@ const KEY = {
   lastNote: "lm.lastNote",
   pinned: "lm.pinned",
   previewWidth: "lm.previewWidth",
+  imageDir: "lm.imageDir",
 } as const;
 
 // ============================================================================
@@ -76,6 +77,25 @@ export function writeLastNote(workspace: string, notePath: string): void {
   const map = readJSON<LastNoteMap>(KEY.lastNote, {});
   map[workspace] = notePath;
   writeJSON(KEY.lastNote, map);
+}
+
+// ============================================================================
+// 画像の保存先フォルダ（ワークスペースごと）
+// ============================================================================
+// ワークスペース内の相対パスを保存する。ワークスペースごとに持つのは、Hugo の
+// 記事フォルダと普段のメモ帳とで置き場所が違うため。未設定なら undefined を返し、
+// 既定（constants.ts の IMAGE_DIR）に倒すかは呼び出し側が決める。
+type ImageDirMap = Record<string, string>;
+
+export const readImageDir = (workspace: string): string | undefined =>
+  readJSON<ImageDirMap>(KEY.imageDir, {})[workspace];
+
+// 空文字を渡すとキーごと落として未設定に戻す（既定と同じ意味の値を残さない）。
+export function writeImageDir(workspace: string, dir: string): void {
+  const map = readJSON<ImageDirMap>(KEY.imageDir, {});
+  if (dir) map[workspace] = dir;
+  else delete map[workspace];
+  writeJSON(KEY.imageDir, map);
 }
 
 // ============================================================================

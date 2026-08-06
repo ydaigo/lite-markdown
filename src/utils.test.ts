@@ -11,8 +11,10 @@ import {
   joinPath,
   matchOffsets,
   mermaidThemeName,
+  normalizeImageDir,
   noteFileName,
   relativeNoteName,
+  resolvePath,
 } from "./utils";
 
 describe("isMarkdownPath", () => {
@@ -306,5 +308,88 @@ describe("clampPreviewWidth", () => {
   it("入れ物が下限より狭くても下限を返す（上限と下限が反転しない）", () => {
     expect(clampPreviewWidth(800, 200)).toBe(360);
     expect(clampPreviewWidth(100, 200)).toBe(360);
+  });
+});
+
+describe("normalizeImageDir", () => {
+  it("そのまま使える相対パスは変えない", () => {
+    expect(normalizeImageDir("image")).toBe("image");
+    expect(normalizeImageDir("static/images")).toBe("static/images");
+  });
+
+  it("前後の空白・余分な区切り・./ を落とす", () => {
+    expect(normalizeImageDir("  assets  ")).toBe("assets");
+    expect(normalizeImageDir("/")).toBe("");
+    expect(normalizeImageDir("./static//images/")).toBe("static/images");
+  });
+
+  it("区切りを / に揃える（Windows の表記で入力しても同じ）", () => {
+    expect(normalizeImageDir("static\\images")).toBe("static/images");
+  });
+
+  it("空入力は既定に倒すための空文字", () => {
+    expect(normalizeImageDir("")).toBe("");
+    expect(normalizeImageDir("   ")).toBe("");
+    expect(normalizeImageDir(".")).toBe("");
+  });
+
+  it("../ でワークスペースの外も指せる", () => {
+    expect(normalizeImageDir("../images")).toBe("../images");
+    expect(normalizeImageDir("../../static/images")).toBe("../../static/images");
+    expect(normalizeImageDir("..\\..\\static\\images")).toBe("../../static/images");
+  });
+
+  it("途中の .. は畳み、先頭に残った .. だけを外向きとして残す", () => {
+    expect(normalizeImageDir("static/../images")).toBe("images");
+    expect(normalizeImageDir("static/../../images")).toBe("../images");
+    expect(normalizeImageDir("a/b/../../../c")).toBe("../c");
+    expect(normalizeImageDir("..")).toBe("..");
+  });
+
+  it("絶対パスは受け付けない（相対で持たないとワークスペースを移せない）", () => {
+    expect(normalizeImageDir("/Users/me/images")).toBe("");
+    expect(normalizeImageDir("C:\\Users\\me\\images")).toBe("");
+  });
+
+  it("ファイル名に使えない文字を含む指定は受け付けない", () => {
+    expect(normalizeImageDir("img*es")).toBe("");
+    expect(normalizeImageDir('a"b')).toBe("");
+    expect(normalizeImageDir("a|b")).toBe("");
+  });
+});
+
+describe("resolvePath", () => {
+  it("フォルダ側の区切り文字でつなぐ", () => {
+    expect(resolvePath("/home/me/notes", "image")).toBe("/home/me/notes/image");
+    expect(resolvePath("C:\\Users\\me\\notes", "image")).toBe("C:\\Users\\me\\notes\\image");
+  });
+
+  it("入れ子の相対パスも 1 本につなぐ", () => {
+    expect(resolvePath("/home/me/notes", "static/images")).toBe("/home/me/notes/static/images");
+    expect(resolvePath("C:\\Users\\me\\notes", "static/images")).toBe(
+      "C:\\Users\\me\\notes\\static\\images",
+    );
+  });
+
+  it(".. を畳んで親をたどる", () => {
+    expect(resolvePath("/home/me/blog/content/posts", "../../static/images")).toBe(
+      "/home/me/blog/static/images",
+    );
+    expect(resolvePath("C:\\Users\\me\\blog\\content", "..\\static")).toBe(
+      "C:\\Users\\me\\blog\\static",
+    );
+  });
+
+  it("./ と余分な区切りは無視する", () => {
+    expect(resolvePath("/home/me/notes/", "./image//a.png")).toBe("/home/me/notes/image/a.png");
+  });
+
+  it("ルートより上へは出ない", () => {
+    expect(resolvePath("/home", "../../../image")).toBe("/image");
+    expect(resolvePath("C:\\notes", "../../image")).toBe("C:\\image");
+  });
+
+  it("相対パスが空ならフォルダ自身を返す", () => {
+    expect(resolvePath("/home/me/notes", "")).toBe("/home/me/notes");
   });
 });

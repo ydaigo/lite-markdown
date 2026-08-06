@@ -4,7 +4,7 @@ import { previewEl } from "./dom";
 import { state, findNoteByName } from "./store";
 import { getDoc } from "./editor";
 import { withErrorNotice } from "./errors";
-import { escapeHtml, externalUrl, noteFileName, relativeNoteName } from "./utils";
+import { escapeHtml, externalUrl, noteFileName, relativeNoteName, resolvePath } from "./utils";
 import { t } from "./i18n";
 import { cancelDiagrams, renderDiagrams } from "./diagrams";
 import { openDiagramZoom } from "./diagram-zoom";
@@ -141,12 +141,14 @@ export function renderPreview(): void {
 
 // プレビュー内のローカル画像（image/... の相対パス）を
 // Tauri の asset URL に解決して表示できるようにする。
+// 保存先の設定は ../ で外へ出せるため、リンクにも .. が入りうる。asset URL は
+// パスを丸ごと 1 つの値として載せるので webview 側では畳まれない。ここで解決する。
 function resolveLocalImages(): void {
   if (!state.workspace) return;
   previewEl.querySelectorAll("img").forEach((img) => {
     const raw = img.getAttribute("src") || "";
     if (/^(https?:|data:|blob:|asset:|tauri:)/i.test(raw)) return;
-    const abs = `${state.workspace}/${raw}`.replace(/\\/g, "/");
+    const abs = resolvePath(state.workspace, raw).replace(/\\/g, "/");
     img.src = convertFileSrc(abs);
   });
 }

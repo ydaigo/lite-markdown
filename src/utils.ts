@@ -61,6 +61,46 @@ export const clampPreviewWidth = (px: number, available: number): number => {
   return Math.min(Math.max(px, PREVIEW_WIDTH.min), max);
 };
 
+// 画像の保存先として設定できるのは、ワークスペースからの相対パス。本文にはこの値を
+// そのまま相対リンクとして書くので、区切りは "/" に揃える。../ で外のフォルダも
+// 指せる（Hugo の content/posts をワークスペースにして static/images へ置く構成用）。
+// 絶対パス・ドライブ指定・ファイル名に使えない文字は "" を返し、呼び出し側が既定の
+// フォルダに倒す。行き先を絶対パスで持つと、ワークスペースを移したときに前の場所を
+// 指したままになるため、外へ出る場合も相対で持つ。
+export const normalizeImageDir = (input: string): string => {
+  const path = input.trim().replace(/\\/g, "/");
+  if (path.startsWith("/") || /^[a-z]:/i.test(path)) return "";
+  if (/[:*?"<>|]/.test(path)) return "";
+  const parts: string[] = [];
+  for (const seg of path.split("/")) {
+    const s = seg.trim();
+    if (s === "" || s === ".") continue;
+    // a/../b は b に畳む。先頭に残った .. だけがワークスペースの外を指す。
+    if (s === ".." && parts.length > 0 && parts[parts.length - 1] !== "..") parts.pop();
+    else parts.push(s);
+  }
+  return parts.join("/");
+};
+
+// 絶対パス base から相対パス rel をたどった先を、.. を畳んで 1 本の絶対パスにする。
+// 区切り文字は base の表記に合わせる（Windows なら "\"）。
+// .. を残したまま OS やプラグインへ渡すと、権限の判定や asset URL の解決が
+// 実装依存になるため、こちら側で畳んでから渡す。ルートより上へは出さない。
+export const resolvePath = (base: string, rel: string): string => {
+  const sep = base.includes("\\") ? "\\" : "/";
+  const parts = base.replace(/[\\/]+$/, "").split(/[\\/]/);
+  for (const seg of rel.split(/[\\/]/)) {
+    const s = seg.trim();
+    if (s === "" || s === ".") continue;
+    if (s === "..") {
+      if (parts.length > 1) parts.pop();
+      continue;
+    }
+    parts.push(s);
+  }
+  return parts.join(sep);
+};
+
 // Mermaid のテーマ名。state.theme（light/dark）から素直に対応させる。
 // 引数に Theme 型を使わないのは意図的。store.ts は読み込み時に window.matchMedia を
 // 触るため node 環境のテストから import できず、ここが巻き込まれてしまう。

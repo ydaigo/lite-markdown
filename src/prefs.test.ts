@@ -10,6 +10,8 @@ import {
   writeTheme,
   readPreviewWidth,
   writePreviewWidth,
+  readImageDir,
+  writeImageDir,
 } from "./prefs";
 
 // node 環境には localStorage が無いため、テストごとに空のモックへ差し替える。
@@ -73,6 +75,22 @@ describe("prefs", () => {
   it("プレビュー幅は整数に丸めて保存する", () => {
     writePreviewWidth(860.6);
     expect(readPreviewWidth()).toBe(861);
+  });
+
+  it("画像の保存先をワークスペースごとに覚える", () => {
+    expect(readImageDir("/ws1")).toBeUndefined();
+    writeImageDir("/ws1", "image");
+    writeImageDir("/ws2", "static/images");
+    expect(readImageDir("/ws1")).toBe("image");
+    expect(readImageDir("/ws2")).toBe("static/images");
+  });
+
+  it("空文字を書くと未設定に戻る（他のワークスペースは残る）", () => {
+    writeImageDir("/ws1", "image");
+    writeImageDir("/ws2", "static/images");
+    writeImageDir("/ws1", "");
+    expect(readImageDir("/ws1")).toBeUndefined();
+    expect(readImageDir("/ws2")).toBe("static/images");
   });
 
   it("数として読めないプレビュー幅は未保存と同じ扱い", () => {

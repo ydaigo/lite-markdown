@@ -1,12 +1,15 @@
 import { getVersion } from "@tauri-apps/api/app";
 import { el } from "./dom";
-import { isAutoUpdateEnabled, writeAutoUpdateEnabled } from "./prefs";
+import { state } from "./store";
+import { isAutoUpdateEnabled, writeAutoUpdateEnabled, readImageDir, writeImageDir } from "./prefs";
+import { normalizeImageDir } from "./utils";
+import { IMAGE_DIR } from "./constants";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
 import { applyLanguage } from "./localize";
 import { SHORTCUTS } from "./shortcuts";
 
 // ============================================================================
-// 設定ダイアログ（言語 / 自動更新 / ショートカット一覧）
+// 設定ダイアログ（言語 / 画像 / 自動更新 / ショートカット一覧）
 // ============================================================================
 
 // 自動更新のコードが入っているビルドかどうか（リリースビルドのみ 1）。
@@ -64,6 +67,27 @@ function languageSection(): HTMLDivElement {
   return section(t("sectionLanguage"), row(t("langSelectLabel"), select));
 }
 
+// 画像の保存先。ワークスペースごとに覚えるので、未選択なら触らせない。
+function imageSection(): HTMLDivElement {
+  const ws = state.workspace;
+  const input = el("input", "set-input");
+  input.type = "text";
+  input.placeholder = IMAGE_DIR; // 未入力のときに使う既定を薄く見せる
+  input.value = ws ? (readImageDir(ws) ?? "") : "";
+  input.disabled = !ws;
+  // 確定（Enter / フォーカスが外れる）のたびに保存する。受け付けられない指定は
+  // 空に戻り、既定のフォルダに倒れたことが入力欄の見た目でも分かるようにする。
+  input.addEventListener("change", () => {
+    const dir = normalizeImageDir(input.value);
+    input.value = dir;
+    if (ws) writeImageDir(ws, dir);
+  });
+
+  const sec = section(t("sectionImage"), row(t("imageDirLabel"), input));
+  sec.append(el("div", "set-note", ws ? t("imageDirNote") : t("imageDirNoWorkspace")));
+  return sec;
+}
+
 function updateSection(): HTMLDivElement {
   const check = el("input", "set-check");
   check.type = "checkbox";
@@ -100,7 +124,7 @@ function render(): void {
   head.append(el("div", "set-title", t("settingsTitle")), close);
 
   const dialog = el("div", "set-dialog");
-  dialog.append(head, languageSection(), updateSection(), shortcutsSection());
+  dialog.append(head, languageSection(), imageSection(), updateSection(), shortcutsSection());
   overlay.replaceChildren(dialog);
 }
 

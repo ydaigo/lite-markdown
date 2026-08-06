@@ -97,9 +97,14 @@ const ja = {
   // 設定ダイアログ
   settingsTitle: "設定",
   sectionLanguage: "言語",
+  sectionImage: "画像",
   sectionUpdate: "更新",
   sectionShortcuts: "キーボードショートカット",
   langSelectLabel: "表示言語",
+  imageDirLabel: "貼り付けた画像の保存先",
+  imageDirNote:
+    "ワークスペースからの相対パス（既定: image）。../ で外のフォルダも指定できます。設定はワークスペースごとです。",
+  imageDirNoWorkspace: "ワークスペースを選ぶと設定できます",
   versionLabel: "バージョン",
   autoUpdateLabel: "起動時に自動で更新を確認する",
   autoUpdateUnavailable: "このビルドでは自動更新は利用できません",
@@ -192,9 +197,14 @@ const en: Record<MsgKey, string> = {
 
   settingsTitle: "Settings",
   sectionLanguage: "Language",
+  sectionImage: "Images",
   sectionUpdate: "Updates",
   sectionShortcuts: "Keyboard shortcuts",
   langSelectLabel: "Display language",
+  imageDirLabel: "Folder for pasted images",
+  imageDirNote:
+    "A path relative to the workspace (default: image). ../ may point outside it. Saved per workspace.",
+  imageDirNoWorkspace: "Choose a workspace to set this",
   versionLabel: "Version",
   autoUpdateLabel: "Check for updates on startup",
   autoUpdateUnavailable: "Auto update is not available in this build",
