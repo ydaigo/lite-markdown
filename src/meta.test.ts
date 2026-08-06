@@ -54,20 +54,67 @@ describe("deriveMeta", () => {
     });
   });
 
-  it("YAML front matter を読み飛ばして見出しを拾う", () => {
+  it("front matter の title を見出しより優先する", () => {
     const text = '---\ntitle: "メタのタイトル"\ndate: 2026-01-01\n---\n\n# 本文の見出し\n段落';
-    expect(deriveMeta(text)).toEqual({ title: "本文の見出し", snippet: "段落" });
+    expect(deriveMeta(text)).toEqual({ title: "メタのタイトル", snippet: "本文の見出し" });
   });
 
-  it("TOML front matter(+++)も読み飛ばす", () => {
+  it("Hugo の記事から title と本文の抜粋を拾う", () => {
+    const text = [
+      "---",
+      'title: "Hello World — ブログはじめました AI生成"',
+      "date: 2026-08-07T00:00:00+09:00",
+      "draft: false",
+      'tags: ["雑記", "hugo"]',
+      'categories: ["お知らせ"]',
+      'summary: "Hugo + GitHub Pages でブログを立ち上げました。最初の記事です。"',
+      "---",
+      "",
+      "はじめまして。",
+    ].join("\n");
+    expect(deriveMeta(text)).toEqual({
+      title: "Hello World — ブログはじめました AI生成",
+      snippet: "はじめまして。",
+    });
+  });
+
+  it("title と同じ見出しは抜粋に出さない", () => {
+    expect(deriveMeta("---\ntitle: 記事\n---\n# 記事\n本文")).toEqual({
+      title: "記事",
+      snippet: "本文",
+    });
+  });
+
+  it("引用符の無い title も読む", () => {
+    expect(deriveMeta("---\ntitle: メタ\n---\n本文")).toEqual({
+      title: "メタ",
+      snippet: "本文",
+    });
+  });
+
+  it("入れ子の title は使わない", () => {
+    expect(deriveMeta("---\nparams:\n  title: 入れ子\n---\n# 見出し\n本文")).toEqual({
+      title: "見出し",
+      snippet: "本文",
+    });
+  });
+
+  it("TOML front matter(+++)の title も読む", () => {
     expect(deriveMeta('+++\ntitle = "メタ"\n+++\n# 見出し\n段落')).toEqual({
+      title: "メタ",
+      snippet: "見出し",
+    });
+  });
+
+  it("title の無い front matter は読み飛ばして見出しを拾う", () => {
+    expect(deriveMeta("---\ndate: 2026-01-01\n---\n# 見出し\n段落")).toEqual({
       title: "見出し",
       snippet: "段落",
     });
   });
 
-  it("front matter の後に見出しが無ければ最初の本文行をタイトルにする", () => {
-    expect(deriveMeta("---\ntitle: メタ\n---\n本文1\n本文2")).toEqual({
+  it("front matter に title も本文に見出しも無ければ最初の本文行をタイトルにする", () => {
+    expect(deriveMeta("---\ndate: 2026-01-01\n---\n本文1\n本文2")).toEqual({
       title: "本文1",
       snippet: "本文2",
     });
@@ -75,5 +122,12 @@ describe("deriveMeta", () => {
 
   it("front matter が閉じていなければ本文として読む", () => {
     expect(deriveMeta("---\n# 見出し\n段落")).toEqual({ title: "見出し", snippet: "段落" });
+  });
+
+  it("閉じていない front matter の title はタイトルにしない", () => {
+    expect(deriveMeta("---\ntitle: メタ\n# 見出し")).toEqual({
+      title: "見出し",
+      snippet: "title: メタ",
+    });
   });
 });
