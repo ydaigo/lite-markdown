@@ -18,6 +18,7 @@ const KEY = {
   previewWidth: "lm.previewWidth",
   imageDir: "lm.imageDir",
   imageUrlPrefix: "lm.imageUrlPrefix",
+  frontMatter: "lm.frontMatter",
 } as const;
 
 // ============================================================================
@@ -106,6 +107,22 @@ function writePerWorkspace(key: string, workspace: string, value: string): void 
   if (value) map[workspace] = value;
   else delete map[workspace];
   writeJSON(key, map);
+}
+
+// ============================================================================
+// 新規メモに front matter を付けるか（ワークスペースごと）
+// ============================================================================
+// 既定は無効。Hugo の記事フォルダでだけ入れたいもので、普段のメモ帳では邪魔なため。
+type FlagMap = Record<string, boolean>;
+
+export const readFrontMatterEnabled = (workspace: string): boolean =>
+  readJSON<FlagMap>(KEY.frontMatter, {})[workspace] === true;
+
+export function writeFrontMatterEnabled(workspace: string, on: boolean): void {
+  const map = readJSON<FlagMap>(KEY.frontMatter, {});
+  if (on) map[workspace] = true;
+  else delete map[workspace]; // 既定と同じ意味の false は残さない
+  writeJSON(KEY.frontMatter, map);
 }
 
 // ============================================================================

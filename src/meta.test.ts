@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { deriveMeta } from "./meta";
+import { deriveMeta, isBlankNote, stripFrontMatter } from "./meta";
 
 describe("deriveMeta", () => {
   it("空文字ならタイトルを既定値にする", () => {
@@ -129,5 +129,51 @@ describe("deriveMeta", () => {
       title: "見出し",
       snippet: "title: メタ",
     });
+  });
+});
+
+describe("stripFrontMatter", () => {
+  it("--- で囲んだメタデータを落とす", () => {
+    const text = '---\ntitle: "はじめに"\ndate: 2026-08-07T07:02:47+09:00\n---\n\n# 見出し\n本文';
+    expect(stripFrontMatter(text)).toBe("\n# 見出し\n本文");
+  });
+
+  it("+++（TOML）も落とす", () => {
+    expect(stripFrontMatter('+++\ntitle = "a"\n+++\n本文')).toBe("本文");
+  });
+
+  it("front matter が無ければそのまま返す", () => {
+    expect(stripFrontMatter("# 見出し\n本文")).toBe("# 見出し\n本文");
+    expect(stripFrontMatter("")).toBe("");
+  });
+
+  it("閉じていなければ本文として残す（丸ごと消さない）", () => {
+    expect(stripFrontMatter("---\ntitle: メタ\n# 見出し")).toBe("---\ntitle: メタ\n# 見出し");
+  });
+
+  it("本文中の --- は区切り線として残す", () => {
+    expect(stripFrontMatter("---\ntitle: a\n---\n本文\n\n---\n\n続き")).toBe("本文\n\n---\n\n続き");
+  });
+});
+
+describe("isBlankNote", () => {
+  it("空文字と空白だけは手つかず", () => {
+    expect(isBlankNote("")).toBe(true);
+    expect(isBlankNote("  \n\n ")).toBe(true);
+  });
+
+  it("front matter の雛形だけ（title も空）なら手つかず", () => {
+    expect(
+      isBlankNote('---\ntitle: ""\ndate: 2026-08-07T10:00:00+09:00\ndraft: true\n---\n\n'),
+    ).toBe(true);
+  });
+
+  it("title を書いていれば書きかけとして残す", () => {
+    expect(isBlankNote('---\ntitle: "はじめに"\ndraft: true\n---\n\n')).toBe(false);
+  });
+
+  it("本文があれば残す", () => {
+    expect(isBlankNote("本文")).toBe(false);
+    expect(isBlankNote('---\ntitle: ""\n---\n本文')).toBe(false);
   });
 });

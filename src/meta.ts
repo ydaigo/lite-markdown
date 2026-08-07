@@ -11,10 +11,10 @@ import { t } from "./i18n";
 function readFrontMatter(lines: string[]): { start: number; title: string } {
   const fence = lines[0]?.trim();
   if (fence !== "---" && fence !== "+++") return { start: 0, title: "" };
+  const end = closingFenceLine(lines, fence);
+  if (end < 0) return { start: 1, title: "" };
   let title = "";
-  for (let i = 1; i < lines.length; i++) {
-    if (lines[i].trim() === fence) return { start: i + 1, title };
-    if (title) continue;
+  for (let i = 1; i < end && title === ""; i++) {
     // 行頭固定にして最上位のキーだけを拾う（params: の下などの入れ子の title は無視）。
     // YAML の `title: x` と TOML の `title = x` を同じ形で受ける。
     const m = /^title\s*[:=]\s*(.+)$/.exec(lines[i]);
@@ -25,7 +25,35 @@ function readFrontMatter(lines: string[]): { start: number; title: string } {
         .replace(/^(["'])(.*)\1$/s, "$2")
         .trim();
   }
-  return { start: 1, title: "" };
+  return { start: end + 1, title };
+}
+
+// front matter を閉じている行の番号。囲みが成立していなければ -1。
+function closingFenceLine(lines: string[], fence: string): number {
+  for (let i = 1; i < lines.length; i++) if (lines[i].trim() === fence) return i;
+  return -1;
+}
+
+// front matter を落として本文だけを返す。プレビューにそのまま流すと、閉じ記号の
+// --- が直前の行に対する setext 見出しとして解釈され、メタデータ全体が巨大な見出しに
+// なってしまうため。囲みが成立していないものは front matter ではないと見てそのまま返す
+// （deriveMeta は 1 行ずらすが、こちらは消してしまうと本文が丸ごと消えかねない）。
+export function stripFrontMatter(text: string): string {
+  const lines = text.split(/\r?\n/);
+  const fence = lines[0]?.trim();
+  if (fence !== "---" && fence !== "+++") return text;
+  const end = closingFenceLine(lines, fence);
+  return end < 0 ? text : lines.slice(end + 1).join("\n");
+}
+
+// 手つかずのメモか（本文が空で、front matter にも title が書かれていない）。
+// front matter の雛形を入れる設定では新規メモが空文字にならないため、「空メモは
+// 作り直さない / 破棄する」の判定を素の空文字比較ではなくこれで行う。
+// 雛形のまま放置したものは捨てるが、title を書いていれば書きかけとして残す。
+export function isBlankNote(text: string): boolean {
+  const lines = text.split(/\r?\n/);
+  const fm = readFrontMatter(lines);
+  return fm.title === "" && lines.slice(fm.start).join("\n").trim() === "";
 }
 
 // タイトルは front matter の title、無ければ本文の最初の見出し行から採る。

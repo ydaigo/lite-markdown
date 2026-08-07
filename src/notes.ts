@@ -6,12 +6,13 @@ import { emptyEl } from "./dom";
 import { getDoc, setDoc } from "./editor";
 import { flushSave, cancelScheduledSave } from "./autosave";
 import { setMode, showEmptyState, updateTitle } from "./view-modes";
-import { deriveMeta } from "./meta";
+import { deriveMeta, isBlankNote } from "./meta";
 import { statMtime } from "./fs-utils";
-import { writeLastNote } from "./prefs";
+import { writeLastNote, readFrontMatterEnabled } from "./prefs";
 import { unpin, topNote } from "./pins";
 import { withErrorNotice, showToast } from "./errors";
-import { isMarkdownPath, joinPath } from "./utils";
+import { isMarkdownPath, joinPath, rfc3339Local } from "./utils";
+import { FRONT_MATTER_TEMPLATE } from "./constants";
 import { t } from "./i18n";
 
 // 一覧から取り除くときはピンも一緒に落とす（消えたメモの記録を残さない）。
@@ -95,11 +96,12 @@ export async function commitCurrent(): Promise<void> {
   cancelScheduledSave();
   const path = state.currentPath;
   if (!path) return;
-  if (getDoc().trim() !== "") {
+  if (!isBlankNote(getDoc())) {
     await flushSave();
     return;
   }
-  // 空メモは macOS メモ同様に破棄。
+  // 空メモは macOS メモ同様に破棄。front matter の雛形だけ入って title も空のものは
+  // 手つかずとみなして同じく捨てる（雛形を入れる設定でも空メモが溜まらないように）。
   try {
     await remove(path);
   } catch {
@@ -137,16 +139,20 @@ export function openNoteByName(name: string): void {
 }
 
 export async function newNote(): Promise<void> {
-  // 現在のメモが空なら、新規作成せずそれを使う。
-  if (state.currentPath && getDoc().trim() === "") {
+  // 現在のメモが手つかずなら、新規作成せずそれを使う。
+  if (state.currentPath && isBlankNote(getDoc())) {
     setMode("edit");
     return;
   }
   await commitCurrent();
   const path = joinPath(state.workspace, `note-${Date.now()}.md`);
-  await writeTextFile(path, "");
+  // Hugo の記事フォルダでは front matter の雛形から始める（設定で有効にしたときだけ）。
+  const text = readFrontMatterEnabled(state.workspace)
+    ? FRONT_MATTER_TEMPLATE.replace("{{date}}", rfc3339Local(new Date()))
+    : "";
+  await writeTextFile(path, text);
   state.notes.unshift({ path, title: t("newNote"), snippet: "", mtime: Date.now(), hay: "" });
-  showNote(path, "", "edit");
+  showNote(path, text, "edit");
 }
 
 export async function deleteNote(path: string): Promise<void> {

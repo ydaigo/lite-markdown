@@ -10,6 +10,8 @@ import {
   writeImageDir,
   readImageUrlPrefix,
   writeImageUrlPrefix,
+  readFrontMatterEnabled,
+  writeFrontMatterEnabled,
 } from "./prefs";
 import { isUnder, normalizeImageDir, normalizeUrlPrefix, resolveImageDir } from "./utils";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
@@ -189,6 +191,23 @@ function imageSection(): HTMLDivElement {
   return sec;
 }
 
+// 新規メモを front matter の雛形から始めるか。Hugo の記事フォルダ向けなので、
+// 画像の設定と同じくワークスペースごとに覚える。
+function newNoteSection(): HTMLDivElement {
+  const ws = state.workspace;
+  const check = el("input", "set-check");
+  check.type = "checkbox";
+  check.disabled = !ws;
+  check.checked = ws ? readFrontMatterEnabled(ws) : false;
+  check.addEventListener("change", () => {
+    if (ws) writeFrontMatterEnabled(ws, check.checked);
+  });
+
+  const sec = section(t("sectionNewNote"), row(t("frontMatterLabel"), check));
+  sec.append(el("div", "set-note", ws ? t("frontMatterNote") : t("imageDirNoWorkspace")));
+  return sec;
+}
+
 function updateSection(): HTMLDivElement {
   const check = el("input", "set-check");
   check.type = "checkbox";
@@ -225,7 +244,14 @@ function render(): void {
   head.append(el("div", "set-title", t("settingsTitle")), close);
 
   const dialog = el("div", "set-dialog");
-  dialog.append(head, languageSection(), imageSection(), updateSection(), shortcutsSection());
+  dialog.append(
+    head,
+    languageSection(),
+    imageSection(),
+    newNoteSection(),
+    updateSection(),
+    shortcutsSection(),
+  );
   overlay.replaceChildren(dialog);
 }
 

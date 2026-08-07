@@ -168,6 +168,19 @@ export const joinPath = (dir: string, name: string): string => {
   return `${base}${sep}${name}`;
 };
 
+// Hugo の date に書く RFC3339 の文字列。ローカル時刻とその UTC オフセットで書く
+// （archetype が出す形と揃える）。toISOString() は UTC に寄せてしまい、深夜に書いた
+// 記事の日付が前日になることがあるため使わない。
+export const rfc3339Local = (d: Date): string => {
+  const p = (n: number): string => String(n).padStart(2, "0");
+  const offset = -d.getTimezoneOffset(); // 分。日本なら +540
+  const sign = offset < 0 ? "-" : "+";
+  const abs = Math.abs(offset);
+  const date = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  const time = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  return `${date}T${time}${sign}${p(Math.floor(abs / 60))}:${p(abs % 60)}`;
+};
+
 // path が base の中（または base そのもの）かを見る。ホームフォルダの外を
 // 指していないかの確認に使う。Windows のパスは大文字小文字を区別しないので、
 // ドライブ指定があるときだけ畳んでから比べる（手入力で users/Users がずれる）。

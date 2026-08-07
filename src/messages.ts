@@ -98,6 +98,7 @@ const ja = {
   settingsTitle: "設定",
   sectionLanguage: "言語",
   sectionImage: "画像",
+  sectionNewNote: "新規メモ",
   sectionUpdate: "更新",
   sectionShortcuts: "キーボードショートカット",
   langSelectLabel: "表示言語",
@@ -112,6 +113,9 @@ const ja = {
   imagePrefixPlaceholder: "例: /images",
   imagePrefixNote:
     "空なら本文には保存先までの相対パスを書きます。Hugo のようにディスク上の位置と公開 URL がずれる構成では、公開 URL の頭（static/images なら /images）を入れてください。設定はワークスペースごとです。",
+  frontMatterLabel: "front matter を付けて始める",
+  frontMatterNote:
+    "Hugo の記事フォルダ向けの設定です。新規メモを title / date / draft を並べた雛形から始めます。プレビューには front matter を出しません。設定はワークスペースごとです。",
   versionLabel: "バージョン",
   autoUpdateLabel: "起動時に自動で更新を確認する",
   autoUpdateUnavailable: "このビルドでは自動更新は利用できません",
@@ -205,6 +209,7 @@ const en: Record<MsgKey, string> = {
   settingsTitle: "Settings",
   sectionLanguage: "Language",
   sectionImage: "Images",
+  sectionNewNote: "New notes",
   sectionUpdate: "Updates",
   sectionShortcuts: "Keyboard shortcuts",
   langSelectLabel: "Display language",
@@ -219,6 +224,9 @@ const en: Record<MsgKey, string> = {
   imagePrefixPlaceholder: "e.g. /images",
   imagePrefixNote:
     "Leave empty to write a path relative to the note. When the folder on disk and the published URL differ — as with Hugo — enter the published prefix (/images for static/images). Saved per workspace.",
+  frontMatterLabel: "Start with front matter",
+  frontMatterNote:
+    "For Hugo content folders. New notes start from a template with title / date / draft. Front matter is hidden in the preview. Saved per workspace.",
   versionLabel: "Version",
   autoUpdateLabel: "Check for updates on startup",
   autoUpdateUnavailable: "Auto update is not available in this build",

@@ -21,6 +21,7 @@ import {
   noteFileName,
   relativeNoteName,
   relativePath,
+  rfc3339Local,
   resolveImageDir,
   resolvePath,
 } from "./utils";
@@ -592,5 +593,20 @@ describe("resolvePath", () => {
 
   it("相対パスが空ならフォルダ自身を返す", () => {
     expect(resolvePath("/home/me/notes", "")).toBe("/home/me/notes");
+  });
+});
+
+describe("rfc3339Local", () => {
+  it("ローカル時刻とオフセットで書く（UTC に寄せない）", () => {
+    // 環境のタイムゾーンに依存しないよう、オフセットを固定した時刻で組み立てて比べる。
+    const d = new Date(2026, 7, 7, 7, 2, 47);
+    const s = rfc3339Local(d);
+    expect(s).toMatch(/^2026-08-07T07:02:47[+-]\d{2}:\d{2}$/);
+    // 同じ時刻を Date として読み直せる（Hugo が読む RFC3339 として成立している）。
+    expect(new Date(s).getTime()).toBe(d.getTime());
+  });
+
+  it("月日と時分秒を 2 桁に揃える", () => {
+    expect(rfc3339Local(new Date(2026, 0, 3, 4, 5, 6))).toMatch(/^2026-01-03T04:05:06/);
   });
 });

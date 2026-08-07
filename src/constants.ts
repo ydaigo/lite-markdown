@@ -6,6 +6,23 @@
 // 設定（prefs.ts の imageDir）でワークスペースごとに絶対パスを指定できる。
 export const IMAGE_DIR = "image";
 
+// 新規メモの頭に入れる front matter の雛形（設定でワークスペースごとに有効化する）。
+// Hugo の archetypes/default.md が出すものと同じ並びにしてある。title を空で置くのは、
+// 一覧のタイトルが本文の見出しへ素直に倒れるようにするため（deriveMeta）。
+// date は書いた時刻に差し替える。
+export const FRONT_MATTER_TEMPLATE = [
+  "---",
+  'title: ""',
+  "date: {{date}}",
+  "draft: true",
+  "tags: []",
+  "categories: []",
+  'summary: ""',
+  "---",
+  "",
+  "",
+].join("\n");
+
 // 自動保存のデバウンス時間(ms)。
 export const SAVE_DEBOUNCE_MS = 400;
 

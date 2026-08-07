@@ -15,6 +15,7 @@ import {
   resolveImageDir,
 } from "./utils";
 import { readImageDir, readImageUrlPrefix } from "./prefs";
+import { stripFrontMatter } from "./meta";
 import { t } from "./i18n";
 import { cancelDiagrams, renderDiagrams } from "./diagrams";
 import { openDiagramZoom } from "./diagram-zoom";
@@ -127,7 +128,10 @@ export function setNoteLinkHandler(fn: (name: string) => void): void {
 export const prefetchRenderer = (): void => void loadRenderer();
 
 export function renderPreview(): void {
-  const text = getDoc();
+  // front matter はプレビューに出さない（Hugo 記事では毎回頭に付くうえ、そのまま
+  // 流すと閉じ記号の --- が setext 見出しになってメタデータが巨大な見出しになる）。
+  // 編集はエディタ側でするので、消えて困るものではない。
+  const text = stripFrontMatter(getDoc());
   // 前回の図の描画は非同期で走っているので、本文を入れ替える前に打ち切る。
   cancelDiagrams();
   if (text.trim() === "") {
