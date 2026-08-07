@@ -3,17 +3,25 @@ import {
   baseName,
   boundedCache,
   clampPreviewWidth,
+  decodePath,
   diagramErrorLine,
   dirName,
+  encodePath,
   escapeHtml,
   externalUrl,
+  imageLinkPath,
+  imageSrcPath,
   isMarkdownPath,
+  isUnder,
   joinPath,
   matchOffsets,
   mermaidThemeName,
   normalizeImageDir,
+  normalizeUrlPrefix,
   noteFileName,
   relativeNoteName,
+  relativePath,
+  resolveImageDir,
   resolvePath,
 } from "./utils";
 
@@ -312,49 +320,242 @@ describe("clampPreviewWidth", () => {
 });
 
 describe("normalizeImageDir", () => {
-  it("そのまま使える相対パスは変えない", () => {
-    expect(normalizeImageDir("image")).toBe("image");
-    expect(normalizeImageDir("static/images")).toBe("static/images");
+  it("そのまま使える絶対パスは変えない", () => {
+    expect(normalizeImageDir("/Users/me/notes/image")).toBe("/Users/me/notes/image");
+  });
+
+  it("Windows のパスは区切りを / に、ドライブ文字を大文字に揃える", () => {
+    expect(normalizeImageDir("C:\\Users\\me\\blog\\static\\images")).toBe(
+      "C:/Users/me/blog/static/images",
+    );
+    expect(normalizeImageDir("d:/notes/img")).toBe("D:/notes/img");
   });
 
   it("前後の空白・余分な区切り・./ を落とす", () => {
-    expect(normalizeImageDir("  assets  ")).toBe("assets");
-    expect(normalizeImageDir("/")).toBe("");
-    expect(normalizeImageDir("./static//images/")).toBe("static/images");
+    expect(normalizeImageDir("  /Users/me/img  ")).toBe("/Users/me/img");
+    expect(normalizeImageDir("/Users//me/./img/")).toBe("/Users/me/img");
   });
 
-  it("区切りを / に揃える（Windows の表記で入力しても同じ）", () => {
-    expect(normalizeImageDir("static\\images")).toBe("static/images");
+  it(".. は畳む（ルートより上へは出ない）", () => {
+    expect(normalizeImageDir("/Users/me/blog/content/../../img")).toBe("/Users/me/img");
+    expect(normalizeImageDir("/../../img")).toBe("/img");
   });
 
-  it("空入力は既定に倒すための空文字", () => {
+  it("相対パスは受け付けない（保存先は絶対パスで持つ）", () => {
+    expect(normalizeImageDir("image")).toBe("");
+    expect(normalizeImageDir("../static/images")).toBe("");
+    expect(normalizeImageDir("static\\images")).toBe("");
+  });
+
+  it("空入力とルート自身は既定に倒すための空文字", () => {
     expect(normalizeImageDir("")).toBe("");
     expect(normalizeImageDir("   ")).toBe("");
-    expect(normalizeImageDir(".")).toBe("");
-  });
-
-  it("../ でワークスペースの外も指せる", () => {
-    expect(normalizeImageDir("../images")).toBe("../images");
-    expect(normalizeImageDir("../../static/images")).toBe("../../static/images");
-    expect(normalizeImageDir("..\\..\\static\\images")).toBe("../../static/images");
-  });
-
-  it("途中の .. は畳み、先頭に残った .. だけを外向きとして残す", () => {
-    expect(normalizeImageDir("static/../images")).toBe("images");
-    expect(normalizeImageDir("static/../../images")).toBe("../images");
-    expect(normalizeImageDir("a/b/../../../c")).toBe("../c");
-    expect(normalizeImageDir("..")).toBe("..");
-  });
-
-  it("絶対パスは受け付けない（相対で持たないとワークスペースを移せない）", () => {
-    expect(normalizeImageDir("/Users/me/images")).toBe("");
-    expect(normalizeImageDir("C:\\Users\\me\\images")).toBe("");
+    expect(normalizeImageDir("/")).toBe("");
+    expect(normalizeImageDir("C:\\")).toBe("");
   });
 
   it("ファイル名に使えない文字を含む指定は受け付けない", () => {
-    expect(normalizeImageDir("img*es")).toBe("");
-    expect(normalizeImageDir('a"b')).toBe("");
-    expect(normalizeImageDir("a|b")).toBe("");
+    expect(normalizeImageDir("/Users/me/img*es")).toBe("");
+    expect(normalizeImageDir('/Users/me/a"b')).toBe("");
+    expect(normalizeImageDir("/Users/me/a|b")).toBe("");
+    // ドライブ指定以外の ":" も弾く。
+    expect(normalizeImageDir("/Users/me/a:b")).toBe("");
+  });
+});
+
+describe("normalizeUrlPrefix", () => {
+  it("末尾の / を落とし、重なった / を畳む", () => {
+    expect(normalizeUrlPrefix("/images/")).toBe("/images");
+    expect(normalizeUrlPrefix("//images//sub///")).toBe("/images/sub");
+  });
+
+  it("スキームの // は残す", () => {
+    expect(normalizeUrlPrefix("https://cdn.example.com/img/")).toBe("https://cdn.example.com/img");
+  });
+
+  it("Windows の区切りで入力しても / に揃える", () => {
+    expect(normalizeUrlPrefix("\\images")).toBe("/images");
+  });
+
+  it("空なら空（本文には相対パスを書く）", () => {
+    expect(normalizeUrlPrefix("")).toBe("");
+    expect(normalizeUrlPrefix("   ")).toBe("");
+  });
+
+  it("/ だけの指定はサイトルート直下として残す", () => {
+    expect(normalizeUrlPrefix("/")).toBe("/");
+  });
+});
+
+describe("resolveImageDir", () => {
+  it("未設定ならワークスペース直下の image", () => {
+    expect(resolveImageDir("/Users/me/notes")).toBe("/Users/me/notes/image");
+    expect(resolveImageDir("C:\\Users\\me\\notes")).toBe("C:/Users/me/notes/image");
+  });
+
+  it("絶対パスが保存されていればそれを使う", () => {
+    expect(resolveImageDir("/Users/me/notes", "/Users/me/blog/static/images")).toBe(
+      "/Users/me/blog/static/images",
+    );
+  });
+
+  it("v0.2.7 までの相対パスはワークスペース基準で絶対に直す", () => {
+    expect(resolveImageDir("/Users/me/blog/content/posts", "../../static/images")).toBe(
+      "/Users/me/blog/static/images",
+    );
+    expect(resolveImageDir("/Users/me/notes", "assets")).toBe("/Users/me/notes/assets");
+  });
+
+  it("読めない値なら既定へ倒す", () => {
+    expect(resolveImageDir("/Users/me/notes", "a|b")).toBe("/Users/me/notes/image");
+  });
+});
+
+describe("relativePath", () => {
+  it("配下なら残りの部分だけを返す", () => {
+    expect(relativePath("/Users/me/notes", "/Users/me/notes/image")).toBe("image");
+  });
+
+  it("外へ出るときは .. でたどる", () => {
+    expect(relativePath("/Users/me/blog/content/posts", "/Users/me/blog/static/images")).toBe(
+      "../../static/images",
+    );
+  });
+
+  it("同じ場所なら空文字", () => {
+    expect(relativePath("/Users/me/notes", "/Users/me/notes/")).toBe("");
+  });
+
+  it("Windows の表記も混在させて扱える", () => {
+    expect(relativePath("C:\\Users\\me\\notes", "C:/Users/me/notes/image")).toBe("image");
+  });
+
+  it("別ドライブへは相対で戻れないので null", () => {
+    expect(relativePath("C:/Users/me/notes", "D:/img")).toBeNull();
+  });
+});
+
+describe("encodePath / decodePath", () => {
+  it("区切り以外を percent-encode する（空白を含むフォルダ名で切れない）", () => {
+    expect(encodePath("../My Notes/images/img-1.png")).toBe("../My%20Notes/images/img-1.png");
+  });
+
+  it("decodePath は encodePath を元に戻す", () => {
+    expect(decodePath(encodePath("../My Notes/画像/img-1.png"))).toBe("../My Notes/画像/img-1.png");
+  });
+
+  it("エンコードされていない本文もそのまま通す", () => {
+    expect(decodePath("image/100%達成.png")).toBe("image/100%達成.png");
+  });
+});
+
+describe("imageLinkPath", () => {
+  const ws = "/Users/me/notes";
+
+  it("プレフィックスが無ければワークスペースからの相対パス", () => {
+    expect(imageLinkPath(ws, "/Users/me/notes/image", "img-1.png", "")).toBe("image/img-1.png");
+  });
+
+  it("保存先がワークスペース自身ならファイル名だけ", () => {
+    expect(imageLinkPath(ws, ws, "img-1.png", "")).toBe("img-1.png");
+  });
+
+  it("外のフォルダなら .. でたどる", () => {
+    expect(
+      imageLinkPath(
+        "/Users/me/blog/content/posts",
+        "/Users/me/blog/static/images",
+        "img-1.png",
+        "",
+      ),
+    ).toBe("../../static/images/img-1.png");
+  });
+
+  it("プレフィックスがあれば公開 URL の形で書く（Hugo の static/ 構成）", () => {
+    expect(
+      imageLinkPath(
+        "/Users/me/blog/content/posts",
+        "/Users/me/blog/static/images",
+        "img-1.png",
+        "/images",
+      ),
+    ).toBe("/images/img-1.png");
+    expect(imageLinkPath(ws, "/Users/me/notes/image", "img-1.png", "/")).toBe("/img-1.png");
+  });
+
+  it("空白を含むフォルダ名は encode する（プレフィックスには触らない）", () => {
+    expect(imageLinkPath("/Users/me/My Notes", "/Users/me/My Notes/my img", "a.png", "")).toBe(
+      "my%20img/a.png",
+    );
+    expect(imageLinkPath(ws, "/Users/me/notes/image", "a.png", "https://cdn.example.com/i")).toBe(
+      "https://cdn.example.com/i/a.png",
+    );
+  });
+
+  it("別ドライブは相対で書けないので絶対パスで書く（ドライブ指定は encode しない）", () => {
+    expect(imageLinkPath("C:/Users/me/notes", "D:/img", "a.png", "")).toBe("D:/img/a.png");
+    expect(imageLinkPath("C:/Users/me/notes", "D:/my img", "a.png", "")).toBe("D:/my%20img/a.png");
+  });
+});
+
+describe("imageSrcPath", () => {
+  const ws = "/Users/me/blog/content/posts";
+  const dir = "/Users/me/blog/static/images";
+
+  it("プレフィックスで始まる本文パスは保存先へ戻す", () => {
+    expect(imageSrcPath("/images/img-1.png", ws, dir, "/images")).toBe(
+      "/Users/me/blog/static/images/img-1.png",
+    );
+  });
+
+  it("プレフィックスが無ければワークスペース基準で解決する", () => {
+    expect(imageSrcPath("../../static/images/img-1.png", ws, dir, "")).toBe(
+      "/Users/me/blog/static/images/img-1.png",
+    );
+  });
+
+  it("プレフィックスに当たらないパスはワークスペース基準のまま", () => {
+    expect(imageSrcPath("fig/a.png", ws, dir, "/images")).toBe(
+      "/Users/me/blog/content/posts/fig/a.png",
+    );
+  });
+
+  it("別ドライブへ絶対で書いたものはそのまま返す", () => {
+    expect(imageSrcPath("D:/img/a.png", "C:/Users/me/notes", "D:/img", "")).toBe("D:/img/a.png");
+  });
+
+  it("imageLinkPath が書いた形をそのまま戻せる", () => {
+    for (const prefix of ["", "/images", "/"]) {
+      const link = imageLinkPath(ws, dir, "img-1.png", prefix);
+      expect(imageSrcPath(decodePath(link), ws, dir, prefix)).toBe(`${dir}/img-1.png`);
+    }
+    // 別ドライブ（Windows）も往復できる。
+    const winWs = "D:/notes";
+    const winDir = "C:/Users/me/images";
+    const winLink = imageLinkPath(winWs, winDir, "img-1.png", "");
+    expect(imageSrcPath(decodePath(winLink), winWs, winDir, "")).toBe(`${winDir}/img-1.png`);
+  });
+});
+
+describe("isUnder", () => {
+  it("配下と自身は true", () => {
+    expect(isUnder("/Users/me", "/Users/me/notes/image")).toBe(true);
+    expect(isUnder("/Users/me", "/Users/me")).toBe(true);
+    expect(isUnder("/Users/me/", "/Users/me/img")).toBe(true);
+  });
+
+  it("外は false（名前の頭が同じだけの隣も弾く）", () => {
+    expect(isUnder("/Users/me", "/Volumes/disk/img")).toBe(false);
+    expect(isUnder("/Users/me", "/Users/menu/img")).toBe(false);
+  });
+
+  it("Windows は大文字小文字を区別しない", () => {
+    expect(isUnder("C:\\Users\\Me", "C:/users/me/img")).toBe(true);
+    expect(isUnder("C:\\Users\\Me", "D:/img")).toBe(false);
+  });
+
+  it("基準が空なら判定しない（false）", () => {
+    expect(isUnder("", "/Users/me/img")).toBe(false);
   });
 });
 

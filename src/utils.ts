@@ -1,4 +1,4 @@
-import { PREVIEW_WIDTH } from "./constants";
+import { IMAGE_DIR, PREVIEW_WIDTH } from "./constants";
 
 // ============================================================================
 // 汎用の純粋関数ヘルパ
@@ -59,27 +59,6 @@ export const escapeHtml = (s: string): string =>
 export const clampPreviewWidth = (px: number, available: number): number => {
   const max = Math.max(PREVIEW_WIDTH.min, available - PREVIEW_WIDTH.gutter * 2);
   return Math.min(Math.max(px, PREVIEW_WIDTH.min), max);
-};
-
-// 画像の保存先として設定できるのは、ワークスペースからの相対パス。本文にはこの値を
-// そのまま相対リンクとして書くので、区切りは "/" に揃える。../ で外のフォルダも
-// 指せる（Hugo の content/posts をワークスペースにして static/images へ置く構成用）。
-// 絶対パス・ドライブ指定・ファイル名に使えない文字は "" を返し、呼び出し側が既定の
-// フォルダに倒す。行き先を絶対パスで持つと、ワークスペースを移したときに前の場所を
-// 指したままになるため、外へ出る場合も相対で持つ。
-export const normalizeImageDir = (input: string): string => {
-  const path = input.trim().replace(/\\/g, "/");
-  if (path.startsWith("/") || /^[a-z]:/i.test(path)) return "";
-  if (/[:*?"<>|]/.test(path)) return "";
-  const parts: string[] = [];
-  for (const seg of path.split("/")) {
-    const s = seg.trim();
-    if (s === "" || s === ".") continue;
-    // a/../b は b に畳む。先頭に残った .. だけがワークスペースの外を指す。
-    if (s === ".." && parts.length > 0 && parts[parts.length - 1] !== "..") parts.pop();
-    else parts.push(s);
-  }
-  return parts.join("/");
 };
 
 // 絶対パス base から相対パス rel をたどった先を、.. を畳んで 1 本の絶対パスにする。
@@ -187,4 +166,140 @@ export const joinPath = (dir: string, name: string): string => {
   const base = dir.replace(/[\\/]+$/, "");
   const sep = base.includes("\\") ? "\\" : "/";
   return `${base}${sep}${name}`;
+};
+
+// path が base の中（または base そのもの）かを見る。ホームフォルダの外を
+// 指していないかの確認に使う。Windows のパスは大文字小文字を区別しないので、
+// ドライブ指定があるときだけ畳んでから比べる（手入力で users/Users がずれる）。
+export const isUnder = (base: string, path: string): boolean => {
+  const norm = (p: string): string => {
+    const s = p.replace(/\\/g, "/").replace(/\/+$/, "");
+    return /^[a-z]:/i.test(s) ? s.toLowerCase() : s;
+  };
+  const b = norm(base);
+  const p = norm(path);
+  return b !== "" && (p === b || p.startsWith(`${b}/`));
+};
+
+// ============================================================================
+// 画像の保存先と、本文に書く画像パス
+// ============================================================================
+// 設定は 2 つある。
+//   保存先(imageDir)    … 画像ファイルを実際に書き込む絶対パス。
+//   プレフィックス(prefix) … 本文に書くパスの頭。空なら相対パスを計算する。
+// 2 つに分かれているのは、ディスク上の位置と公開後の URL がずれる構成があるため。
+// Hugo は static/ の中身をサイトルートへ配るので、ディスクが static/images でも
+// 公開 URL は /images になる。相対パスを書くとアプリのプレビューでは映るが、
+// ビルドしたサイトでは 404 になってしまう。
+
+// 保存先として受け付けるのは絶対パスだけ。区切りは "/" に揃えて持つ（Windows の
+// "\" 入力も C:/Users/me/images の形に直す）。Tauri は Windows でも "/" 区切りを
+// 受け付け、asset URL も "/" に直してから渡しているため、"/" 1 本に寄せておくと
+// 比較も相対パス計算も分岐せずに済む。ドライブ文字は大文字に揃える。
+// 相対パス・ルート直下・ファイル名に使えない文字は "" を返し、呼び出し側が既定へ倒す。
+export const normalizeImageDir = (input: string): string => {
+  const path = input.trim().replace(/\\/g, "/");
+  const drive = /^[a-z]:/i.exec(path)?.[0] ?? "";
+  const rest = path.slice(drive.length);
+  if (!rest.startsWith("/")) return "";
+  if (/[:*?"<>|]/.test(rest)) return "";
+  const parts: string[] = [];
+  for (const seg of rest.split("/")) {
+    const s = seg.trim();
+    if (s === "" || s === ".") continue;
+    if (s === "..")
+      parts.pop(); // ルートより上へは出さない
+    else parts.push(s);
+  }
+  // ルート自身（"/" や "C:/"）は保存先として意味を成さないので受け付けない。
+  return parts.length ? `${drive.toUpperCase()}/${parts.join("/")}` : "";
+};
+
+// 本文に書くパスの頭。"/images" のようなサイト内パスでも "https://cdn/img" のような
+// URL でも通す。末尾の "/" は落とし、重なった "/" は 1 本に畳む（スキームの // は残す）。
+export const normalizeUrlPrefix = (input: string): string => {
+  const raw = input.trim().replace(/\\/g, "/");
+  const scheme = /^[a-z][a-z\d+.-]*:\/\//i.exec(raw)?.[0] ?? "";
+  const rest = raw.slice(scheme.length).replace(/\/{2,}/g, "/");
+  const trimmed = rest.replace(/\/+$/, "");
+  // "/" だけの指定はサイトルート直下の意味なので "/" として残す。
+  return scheme + (trimmed || (rest === "" ? "" : "/"));
+};
+
+// ワークスペースの画像保存先（絶対パス）。未設定ならワークスペース直下の IMAGE_DIR。
+// v0.2.7 まではワークスペースからの相対パスで保存していたため、相対のまま入っている
+// 値はワークスペース基準で解決してから絶対として扱う（設定し直さずに済む）。
+export const resolveImageDir = (workspace: string, saved?: string): string => {
+  const abs = saved
+    ? normalizeImageDir(saved) || normalizeImageDir(resolvePath(workspace, saved))
+    : "";
+  return abs || normalizeImageDir(joinPath(workspace, IMAGE_DIR));
+};
+
+// 絶対パス from から to へたどる相対パスを返す。同じ場所なら ""。
+// 別ドライブ（C: から D:）は相対では表せないので null。
+export const relativePath = (from: string, to: string): string | null => {
+  const split = (p: string): string[] => p.replace(/\\/g, "/").split("/").filter(Boolean);
+  const a = split(from);
+  const b = split(to);
+  const driveOf = (parts: string[]): string =>
+    /^[a-z]:$/i.test(parts[0] ?? "") ? (parts[0] as string).toLowerCase() : "";
+  if (driveOf(a) !== driveOf(b)) return null;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  return [...a.slice(i).map(() => ".."), ...b.slice(i)].join("/");
+};
+
+// Markdown に載せるためのエスケープ。区切り以外を percent-encode するので、
+// 空白を含むフォルダ名（~/My Notes/images）でもリンクが切れない。
+export const encodePath = (path: string): string =>
+  path
+    .split("/")
+    .map((s) => encodeURIComponent(s))
+    .join("/");
+
+// encodePath の逆。エンコードされていない古い本文もそのまま通す。
+export const decodePath = (path: string): string => {
+  try {
+    return decodeURIComponent(path);
+  } catch {
+    // "100%達成" のように % の後ろが 16 進 2 桁でないと URIError になる。
+    return path;
+  }
+};
+
+// 本文に書く画像パスを組み立てる。プレフィックスがあればそれを頭に付けるだけ
+// （公開 URL は利用者が決めるので、こちらでは encode も加工もしない）。
+// 空ならワークスペースからディスク上の相対パスを計算する。
+export const imageLinkPath = (
+  workspace: string,
+  dir: string,
+  name: string,
+  prefix: string,
+): string => {
+  if (prefix) return prefix.endsWith("/") ? `${prefix}${name}` : `${prefix}/${name}`;
+  const rel = relativePath(workspace, dir);
+  if (rel !== null) return encodePath(rel === "" ? name : `${rel}/${name}`);
+  // Windows でワークスペースと保存先が別ドライブのときだけここへ来る。相対では
+  // 戻れないので絶対パスで書く（そのマシンでだけ映る）。ドライブ指定の ":" は
+  // encode すると保存先が読み取れなくなるため、残りの部分だけを encode する。
+  const drive = /^[a-z]:/i.exec(dir)?.[0] ?? "";
+  return drive + encodePath(`${dir.slice(drive.length)}/${name}`);
+};
+
+// imageLinkPath の逆。本文の画像パスからディスク上の絶対パスを求める（プレビュー用）。
+// プレフィックスで始まっていれば保存先へ、そうでなければワークスペース基準で解決する。
+export const imageSrcPath = (
+  src: string,
+  workspace: string,
+  dir: string,
+  prefix: string,
+): string => {
+  const head = prefix.endsWith("/") ? prefix : `${prefix}/`;
+  if (prefix !== "" && src.startsWith(head)) return resolvePath(dir, src.slice(head.length));
+  // ドライブ指定付き（D:/img/a.png）は別ドライブの保存先を絶対で書いたもの。
+  // 先頭が "/" だけのものは対象にしない（プレフィックス無しで手書きされたサイト内
+  // パスをワークスペース基準として扱う、これまでの解釈を変えないため）。
+  if (/^[a-z]:/i.test(src)) return src;
+  return resolvePath(workspace, src);
 };

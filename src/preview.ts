@@ -4,7 +4,17 @@ import { previewEl } from "./dom";
 import { state, findNoteByName } from "./store";
 import { getDoc } from "./editor";
 import { withErrorNotice } from "./errors";
-import { escapeHtml, externalUrl, noteFileName, relativeNoteName, resolvePath } from "./utils";
+import {
+  decodePath,
+  escapeHtml,
+  externalUrl,
+  imageSrcPath,
+  noteFileName,
+  normalizeUrlPrefix,
+  relativeNoteName,
+  resolveImageDir,
+} from "./utils";
+import { readImageDir, readImageUrlPrefix } from "./prefs";
 import { t } from "./i18n";
 import { cancelDiagrams, renderDiagrams } from "./diagrams";
 import { openDiagramZoom } from "./diagram-zoom";
@@ -139,16 +149,20 @@ export function renderPreview(): void {
   refreshPreviewSearch();
 }
 
-// プレビュー内のローカル画像（image/... の相対パス）を
-// Tauri の asset URL に解決して表示できるようにする。
-// 保存先の設定は ../ で外へ出せるため、リンクにも .. が入りうる。asset URL は
-// パスを丸ごと 1 つの値として載せるので webview 側では畳まれない。ここで解決する。
+// プレビュー内のローカル画像を Tauri の asset URL に解決して表示できるようにする。
+// 本文のパスは相対（image/...）とは限らず、プレフィックス設定を使っていれば
+// 公開 URL の形（/images/...）で入っている。どちらもディスク上の絶対パスへ戻す。
+// asset URL はパスを丸ごと 1 つの値として載せるため webview 側では畳まれない。
+// .. の解決も percent-encode の復元もここで済ませてから渡す。
 function resolveLocalImages(): void {
-  if (!state.workspace) return;
+  const ws = state.workspace;
+  if (!ws) return;
+  const dir = resolveImageDir(ws, readImageDir(ws));
+  const prefix = normalizeUrlPrefix(readImageUrlPrefix(ws) ?? "");
   previewEl.querySelectorAll("img").forEach((img) => {
     const raw = img.getAttribute("src") || "";
     if (/^(https?:|data:|blob:|asset:|tauri:)/i.test(raw)) return;
-    const abs = resolvePath(state.workspace, raw).replace(/\\/g, "/");
+    const abs = imageSrcPath(decodePath(raw), ws, dir, prefix).replace(/\\/g, "/");
     img.src = convertFileSrc(abs);
   });
 }

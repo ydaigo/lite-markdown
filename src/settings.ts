@@ -1,9 +1,17 @@
 import { getVersion } from "@tauri-apps/api/app";
+import { homeDir } from "@tauri-apps/api/path";
+import { open } from "@tauri-apps/plugin-dialog";
 import { el } from "./dom";
 import { state } from "./store";
-import { isAutoUpdateEnabled, writeAutoUpdateEnabled, readImageDir, writeImageDir } from "./prefs";
-import { normalizeImageDir } from "./utils";
-import { IMAGE_DIR } from "./constants";
+import {
+  isAutoUpdateEnabled,
+  writeAutoUpdateEnabled,
+  readImageDir,
+  writeImageDir,
+  readImageUrlPrefix,
+  writeImageUrlPrefix,
+} from "./prefs";
+import { isUnder, normalizeImageDir, normalizeUrlPrefix, resolveImageDir } from "./utils";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
 import { applyLanguage } from "./localize";
 import { SHORTCUTS } from "./shortcuts";
@@ -25,6 +33,20 @@ void getVersion()
   })
   .catch(() => {
     /* 取得できなければバージョン行を出さないだけ */
+  });
+
+// ホームフォルダ。画像の保存先がこの中かを確かめるのに使う。Tauri 側の権限
+// （capabilities の fs スコープと assetProtocol の scope）が $HOME/** なので、
+// 外を指定しても書き込みもプレビュー表示もできない。設定の時点で断る。
+// 取得できるまでは空で、その間はこの確認を飛ばす（保存自体は Tauri 側が弾く）。
+let home = "";
+void homeDir()
+  .then((h) => {
+    home = h;
+    render();
+  })
+  .catch(() => {
+    /* 取得できなければホーム内かの確認をしないだけ */
   });
 
 let overlay: HTMLDivElement | null = null;
@@ -67,24 +89,103 @@ function languageSection(): HTMLDivElement {
   return section(t("sectionLanguage"), row(t("langSelectLabel"), select));
 }
 
-// 画像の保存先。ワークスペースごとに覚えるので、未選択なら触らせない。
+// 長いパスを入れる行。420px の枠に「説明 + 操作部」を横並びで入れると入力欄が
+// 狭すぎるので、説明の下に操作部を全幅で置く。
+function stackRow(labelText: string, control: Node): HTMLDivElement {
+  const r = el("div", "set-row set-row-stack");
+  r.append(el("span", "set-desc", labelText), control);
+  return r;
+}
+
+// 画像の保存先と、本文に書くパスの頭。どちらもワークスペースごとに覚えるので、
+// ワークスペースが選ばれていなければ触らせない。
 function imageSection(): HTMLDivElement {
   const ws = state.workspace;
-  const input = el("input", "set-input");
-  input.type = "text";
-  input.placeholder = IMAGE_DIR; // 未入力のときに使う既定を薄く見せる
-  input.value = ws ? (readImageDir(ws) ?? "") : "";
-  input.disabled = !ws;
-  // 確定（Enter / フォーカスが外れる）のたびに保存する。受け付けられない指定は
-  // 空に戻り、既定のフォルダに倒れたことが入力欄の見た目でも分かるようにする。
-  input.addEventListener("change", () => {
-    const dir = normalizeImageDir(input.value);
-    input.value = dir;
-    if (ws) writeImageDir(ws, dir);
+
+  // 保存先の下に出す説明。受け付けられなかったときは理由に差し替える。
+  const note = el("div", "set-note");
+  const showNote = (text: string, isError = false): void => {
+    note.textContent = text;
+    note.classList.toggle("set-note-error", isError);
+  };
+  showNote(ws ? t("imageDirNote") : t("imageDirNoWorkspace"));
+
+  // --- 保存先（絶対パス） ---
+  const dirInput = el("input", "set-input");
+  dirInput.type = "text";
+  dirInput.disabled = !ws;
+  // 未入力のときに使う既定（<ワークスペース>/image）を薄く見せる。
+  dirInput.placeholder = ws ? resolveImageDir(ws) : "";
+
+  // 今保存されている値を入力欄に映す。相対パスで保存されていた古い設定は、
+  // 実際に使われる絶対パスの姿で見せる。未設定なら空にして placeholder に任せる。
+  const showSaved = (): void => {
+    const saved = ws ? readImageDir(ws) : undefined;
+    dirInput.value = ws && saved ? resolveImageDir(ws, saved) : "";
+  };
+  showSaved();
+
+  // 受け付けられない指定は保存せず、入力欄を今の設定に戻して理由を出す
+  // （入力欄が常に「実際に効いている値」を映すようにする）。
+  const applyDir = (value: string): void => {
+    if (!ws) return;
+    if (value.trim() === "") {
+      writeImageDir(ws, ""); // 未設定に戻す（既定へ倒れる）
+      dirInput.value = "";
+      showNote(t("imageDirNote"));
+      return;
+    }
+    const dir = normalizeImageDir(value);
+    if (dir === "") {
+      showSaved();
+      showNote(t("imageDirInvalid"), true);
+      return;
+    }
+    if (home !== "" && !isUnder(home, dir)) {
+      showSaved();
+      showNote(t("imageDirOutsideHome"), true);
+      return;
+    }
+    writeImageDir(ws, dir);
+    dirInput.value = dir;
+    showNote(t("imageDirNote"));
+  };
+  // 確定（Enter / フォーカスが外れる）のたびに保存する。
+  dirInput.addEventListener("change", () => applyDir(dirInput.value));
+
+  // フォルダを選ばせる。手入力と同じ applyDir に通すので、選んだ先がホームの外
+  // だった場合もここで断られる。
+  async function pickDir(): Promise<void> {
+    const picked = await open({ directory: true, multiple: false, title: t("imageDirPickTitle") });
+    if (typeof picked === "string") applyDir(picked);
+  }
+
+  const browse = el("button", "set-btn", t("imageDirBrowse"));
+  browse.disabled = !ws;
+  browse.addEventListener("click", () => void pickDir());
+
+  const dirCtl = el("div", "set-ctl");
+  dirCtl.append(dirInput, browse);
+
+  // --- 本文に書くパスの頭 ---
+  const prefixInput = el("input", "set-input");
+  prefixInput.type = "text";
+  prefixInput.disabled = !ws;
+  prefixInput.placeholder = t("imagePrefixPlaceholder");
+  prefixInput.value = ws ? normalizeUrlPrefix(readImageUrlPrefix(ws) ?? "") : "";
+  prefixInput.addEventListener("change", () => {
+    if (!ws) return;
+    const prefix = normalizeUrlPrefix(prefixInput.value);
+    prefixInput.value = prefix;
+    writeImageUrlPrefix(ws, prefix);
   });
 
-  const sec = section(t("sectionImage"), row(t("imageDirLabel"), input));
-  sec.append(el("div", "set-note", ws ? t("imageDirNote") : t("imageDirNoWorkspace")));
+  const prefixCtl = el("div", "set-ctl");
+  prefixCtl.append(prefixInput);
+
+  const sec = section(t("sectionImage"), stackRow(t("imageDirLabel"), dirCtl), note);
+  sec.append(stackRow(t("imagePrefixLabel"), prefixCtl));
+  if (ws) sec.append(el("div", "set-note", t("imagePrefixNote")));
   return sec;
 }
 

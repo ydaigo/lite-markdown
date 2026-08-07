@@ -12,6 +12,8 @@ import {
   writePreviewWidth,
   readImageDir,
   writeImageDir,
+  readImageUrlPrefix,
+  writeImageUrlPrefix,
 } from "./prefs";
 
 // node 環境には localStorage が無いため、テストごとに空のモックへ差し替える。
@@ -79,18 +81,31 @@ describe("prefs", () => {
 
   it("画像の保存先をワークスペースごとに覚える", () => {
     expect(readImageDir("/ws1")).toBeUndefined();
-    writeImageDir("/ws1", "image");
-    writeImageDir("/ws2", "static/images");
-    expect(readImageDir("/ws1")).toBe("image");
-    expect(readImageDir("/ws2")).toBe("static/images");
+    writeImageDir("/ws1", "/ws1/image");
+    writeImageDir("/ws2", "/blog/static/images");
+    expect(readImageDir("/ws1")).toBe("/ws1/image");
+    expect(readImageDir("/ws2")).toBe("/blog/static/images");
+  });
+
+  it("本文に書くパスの頭を、保存先とは別にワークスペースごとに覚える", () => {
+    expect(readImageUrlPrefix("/ws2")).toBeUndefined();
+    writeImageDir("/ws2", "/blog/static/images");
+    writeImageUrlPrefix("/ws2", "/images");
+    expect(readImageUrlPrefix("/ws2")).toBe("/images");
+    expect(readImageUrlPrefix("/ws1")).toBeUndefined();
+    expect(readImageDir("/ws2")).toBe("/blog/static/images");
   });
 
   it("空文字を書くと未設定に戻る（他のワークスペースは残る）", () => {
-    writeImageDir("/ws1", "image");
-    writeImageDir("/ws2", "static/images");
+    writeImageDir("/ws1", "/ws1/image");
+    writeImageDir("/ws2", "/blog/static/images");
     writeImageDir("/ws1", "");
     expect(readImageDir("/ws1")).toBeUndefined();
-    expect(readImageDir("/ws2")).toBe("static/images");
+    expect(readImageDir("/ws2")).toBe("/blog/static/images");
+
+    writeImageUrlPrefix("/ws2", "/images");
+    writeImageUrlPrefix("/ws2", "");
+    expect(readImageUrlPrefix("/ws2")).toBeUndefined();
   });
 
   it("数として読めないプレビュー幅は未保存と同じ扱い", () => {

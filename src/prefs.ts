@@ -17,6 +17,7 @@ const KEY = {
   pinned: "lm.pinned",
   previewWidth: "lm.previewWidth",
   imageDir: "lm.imageDir",
+  imageUrlPrefix: "lm.imageUrlPrefix",
 } as const;
 
 // ============================================================================
@@ -80,22 +81,31 @@ export function writeLastNote(workspace: string, notePath: string): void {
 }
 
 // ============================================================================
-// 画像の保存先フォルダ（ワークスペースごと）
+// 画像の保存先（ワークスペースごと）
 // ============================================================================
-// ワークスペース内の相対パスを保存する。ワークスペースごとに持つのは、Hugo の
-// 記事フォルダと普段のメモ帳とで置き場所が違うため。未設定なら undefined を返し、
-// 既定（constants.ts の IMAGE_DIR）に倒すかは呼び出し側が決める。
-type ImageDirMap = Record<string, string>;
+// 保存先は絶対パス、プレフィックスは本文に書くパスの頭。どちらもワークスペースごとに
+// 持つ。Hugo の記事フォルダと普段のメモ帳とで置き場所も公開 URL も違うため。
+// 未設定なら undefined を返す。既定に倒す・正規化するのは呼び出し側（utils.ts）。
+type PathMap = Record<string, string>;
 
 export const readImageDir = (workspace: string): string | undefined =>
-  readJSON<ImageDirMap>(KEY.imageDir, {})[workspace];
+  readJSON<PathMap>(KEY.imageDir, {})[workspace];
+
+export const writeImageDir = (workspace: string, dir: string): void =>
+  writePerWorkspace(KEY.imageDir, workspace, dir);
+
+export const readImageUrlPrefix = (workspace: string): string | undefined =>
+  readJSON<PathMap>(KEY.imageUrlPrefix, {})[workspace];
+
+export const writeImageUrlPrefix = (workspace: string, prefix: string): void =>
+  writePerWorkspace(KEY.imageUrlPrefix, workspace, prefix);
 
 // 空文字を渡すとキーごと落として未設定に戻す（既定と同じ意味の値を残さない）。
-export function writeImageDir(workspace: string, dir: string): void {
-  const map = readJSON<ImageDirMap>(KEY.imageDir, {});
-  if (dir) map[workspace] = dir;
+function writePerWorkspace(key: string, workspace: string, value: string): void {
+  const map = readJSON<PathMap>(key, {});
+  if (value) map[workspace] = value;
   else delete map[workspace];
-  writeJSON(KEY.imageDir, map);
+  writeJSON(key, map);
 }
 
 // ============================================================================
