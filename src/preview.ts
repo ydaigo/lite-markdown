@@ -10,11 +10,9 @@ import {
   externalUrl,
   imageSrcPath,
   noteFileName,
-  normalizeUrlPrefix,
   relativeNoteName,
-  resolveImageDir,
 } from "./utils";
-import { readImageDir, readImageUrlPrefix } from "./prefs";
+import { imageDirOf, imageUrlPrefixOf } from "./image-paths";
 import { stripFrontMatter } from "./meta";
 import { t } from "./i18n";
 import { cancelDiagrams, renderDiagrams } from "./diagrams";
@@ -161,8 +159,8 @@ export function renderPreview(): void {
 function resolveLocalImages(): void {
   const ws = state.workspace;
   if (!ws) return;
-  const dir = resolveImageDir(ws, readImageDir(ws));
-  const prefix = normalizeUrlPrefix(readImageUrlPrefix(ws) ?? "");
+  const dir = imageDirOf(ws);
+  const prefix = imageUrlPrefixOf(ws);
   previewEl.querySelectorAll("img").forEach((img) => {
     const raw = img.getAttribute("src") || "";
     if (/^(https?:|data:|blob:|asset:|tauri:)/i.test(raw)) return;

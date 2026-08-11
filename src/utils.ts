@@ -181,19 +181,6 @@ export const rfc3339Local = (d: Date): string => {
   return `${date}T${time}${sign}${p(Math.floor(abs / 60))}:${p(abs % 60)}`;
 };
 
-// path が base の中（または base そのもの）かを見る。ホームフォルダの外を
-// 指していないかの確認に使う。Windows のパスは大文字小文字を区別しないので、
-// ドライブ指定があるときだけ畳んでから比べる（手入力で users/Users がずれる）。
-export const isUnder = (base: string, path: string): boolean => {
-  const norm = (p: string): string => {
-    const s = p.replace(/\\/g, "/").replace(/\/+$/, "");
-    return /^[a-z]:/i.test(s) ? s.toLowerCase() : s;
-  };
-  const b = norm(base);
-  const p = norm(path);
-  return b !== "" && (p === b || p.startsWith(`${b}/`));
-};
-
 // ============================================================================
 // 画像の保存先と、本文に書く画像パス
 // ============================================================================

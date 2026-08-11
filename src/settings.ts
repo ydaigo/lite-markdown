@@ -1,5 +1,4 @@
 import { getVersion } from "@tauri-apps/api/app";
-import { homeDir } from "@tauri-apps/api/path";
 import { open } from "@tauri-apps/plugin-dialog";
 import { el } from "./dom";
 import { state } from "./store";
@@ -8,12 +7,13 @@ import {
   writeAutoUpdateEnabled,
   readImageDir,
   writeImageDir,
-  readImageUrlPrefix,
   writeImageUrlPrefix,
   readFrontMatterEnabled,
   writeFrontMatterEnabled,
 } from "./prefs";
-import { isUnder, normalizeImageDir, normalizeUrlPrefix, resolveImageDir } from "./utils";
+import { normalizeImageDir, normalizeUrlPrefix, resolveImageDir } from "./utils";
+import { allowDir } from "./native";
+import { imageUrlPrefixOf } from "./image-paths";
 import { t, getLang, setLang, LANGS, type Lang } from "./i18n";
 import { applyLanguage } from "./localize";
 import { SHORTCUTS } from "./shortcuts";
@@ -35,20 +35,6 @@ void getVersion()
   })
   .catch(() => {
     /* 取得できなければバージョン行を出さないだけ */
-  });
-
-// ホームフォルダ。画像の保存先がこの中かを確かめるのに使う。Tauri 側の権限
-// （capabilities の fs スコープと assetProtocol の scope）が $HOME/** なので、
-// 外を指定しても書き込みもプレビュー表示もできない。設定の時点で断る。
-// 取得できるまでは空で、その間はこの確認を飛ばす（保存自体は Tauri 側が弾く）。
-let home = "";
-void homeDir()
-  .then((h) => {
-    home = h;
-    render();
-  })
-  .catch(() => {
-    /* 取得できなければホーム内かの確認をしないだけ */
   });
 
 let overlay: HTMLDivElement | null = null;
@@ -143,20 +129,16 @@ function imageSection(): HTMLDivElement {
       showNote(t("imageDirInvalid"), true);
       return;
     }
-    if (home !== "" && !isUnder(home, dir)) {
-      showSaved();
-      showNote(t("imageDirOutsideHome"), true);
-      return;
-    }
     writeImageDir(ws, dir);
+    // ホームの外でも書けるように、選ばれた時点で許可しておく。
+    void allowDir(dir);
     dirInput.value = dir;
     showNote(t("imageDirNote"));
   };
   // 確定（Enter / フォーカスが外れる）のたびに保存する。
   dirInput.addEventListener("change", () => applyDir(dirInput.value));
 
-  // フォルダを選ばせる。手入力と同じ applyDir に通すので、選んだ先がホームの外
-  // だった場合もここで断られる。
+  // フォルダを選ばせる。手入力と同じ applyDir に通す（保存と許可を 1 か所にまとめる）。
   async function pickDir(): Promise<void> {
     const picked = await open({ directory: true, multiple: false, title: t("imageDirPickTitle") });
     if (typeof picked === "string") applyDir(picked);
@@ -174,7 +156,7 @@ function imageSection(): HTMLDivElement {
   prefixInput.type = "text";
   prefixInput.disabled = !ws;
   prefixInput.placeholder = t("imagePrefixPlaceholder");
-  prefixInput.value = ws ? normalizeUrlPrefix(readImageUrlPrefix(ws) ?? "") : "";
+  prefixInput.value = ws ? imageUrlPrefixOf(ws) : "";
   prefixInput.addEventListener("change", () => {
     if (!ws) return;
     const prefix = normalizeUrlPrefix(prefixInput.value);

@@ -12,7 +12,6 @@ import {
   imageLinkPath,
   imageSrcPath,
   isMarkdownPath,
-  isUnder,
   joinPath,
   matchOffsets,
   mermaidThemeName,
@@ -535,28 +534,6 @@ describe("imageSrcPath", () => {
     const winDir = "C:/Users/me/images";
     const winLink = imageLinkPath(winWs, winDir, "img-1.png", "");
     expect(imageSrcPath(decodePath(winLink), winWs, winDir, "")).toBe(`${winDir}/img-1.png`);
-  });
-});
-
-describe("isUnder", () => {
-  it("配下と自身は true", () => {
-    expect(isUnder("/Users/me", "/Users/me/notes/image")).toBe(true);
-    expect(isUnder("/Users/me", "/Users/me")).toBe(true);
-    expect(isUnder("/Users/me/", "/Users/me/img")).toBe(true);
-  });
-
-  it("外は false（名前の頭が同じだけの隣も弾く）", () => {
-    expect(isUnder("/Users/me", "/Volumes/disk/img")).toBe(false);
-    expect(isUnder("/Users/me", "/Users/menu/img")).toBe(false);
-  });
-
-  it("Windows は大文字小文字を区別しない", () => {
-    expect(isUnder("C:\\Users\\Me", "C:/users/me/img")).toBe(true);
-    expect(isUnder("C:\\Users\\Me", "D:/img")).toBe(false);
-  });
-
-  it("基準が空なら判定しない（false）", () => {
-    expect(isUnder("", "/Users/me/img")).toBe(false);
   });
 });
 

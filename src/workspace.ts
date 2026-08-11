@@ -7,6 +7,7 @@ import { showEmptyState } from "./view-modes";
 import { watchWorkspace } from "./sync";
 import { updateWsName } from "./sidebar";
 import { mkdirSafe } from "./fs-utils";
+import { allowDir } from "./native";
 import { showErrorFor } from "./errors";
 import { dirName } from "./utils";
 import {
@@ -16,6 +17,7 @@ import {
   writeCurrentWorkspace,
   readLastNote,
 } from "./prefs";
+import { imageDirOf } from "./image-paths";
 import { DEFAULT_WORKSPACE_DIR } from "./constants";
 import { t } from "./i18n";
 
@@ -42,6 +44,11 @@ export function removeWorkspaceFromHistory(path: string): void {
 // （別ウィンドウで特定のメモを開く場合に使う）。
 export async function setWorkspace(path: string, preferNote?: string): Promise<void> {
   await commitCurrent();
+  // ホームの外のフォルダでも読み書きできるようにしてから触る。許可は保存されないので
+  // 起動のたびに要る。画像の保存先はワークスペースの外を指せるので別に許可する
+  // （プレビューで画像を表示するのにも要る）。
+  await allowDir(path);
+  await allowDir(imageDirOf(path));
   await mkdirSafe(path);
   state.workspace = path;
   state.currentPath = null;
@@ -52,7 +59,7 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
   try {
     await refreshNotes();
   } catch (e) {
-    // ホームフォルダ外など、読み取れないフォルダを選んだ場合の保護。
+    // 消えたフォルダや権限のないフォルダを選んだ場合の保護。
     state.notes = [];
     showEmptyState();
     notify();

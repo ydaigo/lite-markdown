@@ -1,3 +1,5 @@
+mod commands;
+
 use tauri::Manager;
 
 // ウィンドウは非表示で作られ、描画を終えたフロント側が show() する
@@ -8,6 +10,7 @@ const REVEAL_FALLBACK_SECS: u64 = 3;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![commands::allow_dir, commands::open_dir])
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
                 std::thread::spawn(move || {

@@ -36,7 +36,7 @@ const ja = {
   emptyStateHint: "「＋ 新規メモ」で始めましょう。",
 
   // エラー / 通知
-  cannotOpenFolder: "このフォルダは開けません（ホームフォルダ内を選んでください）",
+  cannotOpenFolder: "このフォルダは開けません",
   imageSaveFailed: "画像の保存に失敗しました",
   saveFailed: "メモの保存に失敗しました",
   deleteFailed: "メモの削除に失敗しました",
@@ -106,7 +106,6 @@ const ja = {
   imageDirNote: "絶対パスで指定します。既定はワークスペース内の image フォルダです。",
   imageDirNoWorkspace: "ワークスペースを選ぶと設定できます",
   imageDirInvalid: "絶対パスで指定してください",
-  imageDirOutsideHome: "ホームフォルダの中を指定してください",
   imageDirBrowse: "選択…",
   imageDirPickTitle: "画像の保存先を選ぶ",
   imagePrefixLabel: "本文に書くパスの頭",
@@ -154,7 +153,7 @@ const en: Record<MsgKey, string> = {
   emptyStateTitle: "No notes yet.",
   emptyStateHint: 'Start with "＋ New note".',
 
-  cannotOpenFolder: "Cannot open this folder (choose one inside your home folder)",
+  cannotOpenFolder: "Cannot open this folder",
   imageSaveFailed: "Failed to save the image",
   saveFailed: "Failed to save the note",
   deleteFailed: "Failed to delete the note",
@@ -217,7 +216,6 @@ const en: Record<MsgKey, string> = {
   imageDirNote: "An absolute path. Defaults to the image folder inside the workspace.",
   imageDirNoWorkspace: "Choose a workspace to set this",
   imageDirInvalid: "Enter an absolute path",
-  imageDirOutsideHome: "Choose a folder inside your home folder",
   imageDirBrowse: "Browse…",
   imageDirPickTitle: "Choose the folder for pasted images",
   imagePrefixLabel: "Prefix for the path written in notes",

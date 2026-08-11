@@ -1,8 +1,8 @@
-import { openPath } from "@tauri-apps/plugin-opener";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalPosition } from "@tauri-apps/api/dpi";
 import { state } from "./store";
+import { openDir } from "./native";
 import { flushSave } from "./autosave";
 import { isMac } from "./app-window";
 import { withErrorNotice, showErrorFor, showToast } from "./errors";
@@ -21,7 +21,7 @@ export async function copyPath(path: string): Promise<void> {
 
 // OS のファイルマネージャ（Finder / エクスプローラー）でフォルダの中身を開く。
 export async function openFolder(dir: string): Promise<void> {
-  await withErrorNotice(t("openFolderFailed"), () => openPath(dir));
+  await withErrorNotice(t("openFolderFailed"), () => openDir(dir));
 }
 
 // ============================================================================
