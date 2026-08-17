@@ -10,7 +10,11 @@ const REVEAL_FALLBACK_SECS: u64 = 3;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![commands::allow_dir, commands::open_dir])
+        .invoke_handler(tauri::generate_handler![
+            commands::allow_dir,
+            commands::open_dir,
+            commands::open_terminal
+        ])
         .setup(|app| {
             if let Some(win) = app.get_webview_window("main") {
                 std::thread::spawn(move || {

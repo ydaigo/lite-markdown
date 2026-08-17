@@ -27,3 +27,8 @@ export async function allowDir(dir: string): Promise<void> {
 // opener プラグインの JS API はホーム配下しか開けない（スコープを capabilities で
 // しか指定できず、実行時に足せない）ので、Rust 側から開く。
 export const openDir = (dir: string): Promise<void> => invoke("open_dir", { path: dir });
+
+// OS のターミナル（Terminal.app / Windows Terminal）をそのフォルダで開く。
+// ターミナルの起動はプラグインに無いので、こちらも Rust 側でやる。
+export const openTerminalAt = (dir: string): Promise<void> =>
+  invoke("open_terminal", { path: dir });

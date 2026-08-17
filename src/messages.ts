@@ -43,6 +43,7 @@ const ja = {
   copyPathDone: "パスをコピーしました",
   copyPathFailed: "パスのコピーに失敗しました",
   openFolderFailed: "フォルダを開けませんでした",
+  openTerminalFailed: "ターミナルを開けませんでした",
   openLinkFailed: "リンクを開けませんでした",
   noteLinkMissing: "リンク先のメモが見つかりません",
   newWindowFailed: "新しいウィンドウを開けませんでした",
@@ -63,6 +64,7 @@ const ja = {
   menuOpenInNewWindow: "新規ウィンドウで開く",
   menuCopyPath: "パスをコピー",
   menuOpenFolder: "ディレクトリを開く",
+  menuOpenTerminal: "ターミナルで開く",
   menuRemoveFromHistory: "履歴から削除",
   menuDelete: "削除",
 
@@ -160,6 +162,7 @@ const en: Record<MsgKey, string> = {
   copyPathDone: "Path copied",
   copyPathFailed: "Failed to copy the path",
   openFolderFailed: "Failed to open the folder",
+  openTerminalFailed: "Failed to open the terminal",
   openLinkFailed: "Failed to open the link",
   noteLinkMissing: "Linked note not found",
   newWindowFailed: "Failed to open a new window",
@@ -178,6 +181,7 @@ const en: Record<MsgKey, string> = {
   menuOpenInNewWindow: "Open in new window",
   menuCopyPath: "Copy path",
   menuOpenFolder: "Open folder",
+  menuOpenTerminal: "Open in terminal",
   menuRemoveFromHistory: "Remove from history",
   menuDelete: "Delete",
 
