@@ -1,10 +1,10 @@
 mod commands;
 
-use tauri::Manager;
+use tauri::webview::PageLoadEvent;
 
 // ウィンドウは非表示で作られ、描画を終えたフロント側が show() する
-// （起動時の白いちらつき対策）。フロントが動かなかった場合に備えた保険として、
-// 一定時間で必ず表示する。表示済みなら show() は何もしない。
+// （起動時の白いちらつき対策。src/app-window.ts）。フロントが動かなかった場合に
+// 備えた保険として、一定時間で必ず表示する。表示済みなら show() は何もしない。
 const REVEAL_FALLBACK_SECS: u64 = 3;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -15,14 +15,18 @@ pub fn run() {
             commands::open_dir,
             commands::open_terminal
         ])
-        .setup(|app| {
-            if let Some(win) = app.get_webview_window("main") {
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_secs(REVEAL_FALLBACK_SECS));
-                    let _ = win.show();
-                });
+        // メインもメモ用の別ウィンドウ（note-*）も同じ作りなので、ページを読み込んだ
+        // ウィンドウすべてに掛ける。読み込みの完了ではなく開始で掛けるのは、フロントが
+        // 途中で止まったときにも効かせるため。
+        .on_page_load(|webview, payload| {
+            if payload.event() != PageLoadEvent::Started {
+                return;
             }
-            Ok(())
+            let window = webview.window();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(REVEAL_FALLBACK_SECS));
+                let _ = window.show();
+            });
         })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

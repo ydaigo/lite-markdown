@@ -40,8 +40,13 @@ export const TOAST_DURATION_MS = 1800;
 export const UPDATE_CHECK_DELAY_MS = 3000;
 
 // 初期化がここまでに終わらなくてもウィンドウを表示する時間切れ(ms)。
-// 非表示のまま残さないための保険（Rust 側にはさらに長い保険がある）。
+// 初期化が返ってこない場合の保険（Rust 側にはさらに長い保険がある）。
 export const REVEAL_DEADLINE_MS = 1500;
+
+// 描き終わりを待つ上限(ms)。非表示のうちは描画しない環境（macOS の WKWebView）が
+// あり、そこでは待ち受けている requestAnimationFrame が永久に届かない。
+// 待っても来ないので、これを過ぎたら描画を待たずに表示する。
+export const REVEAL_PAINT_WAIT_MS = 200;
 
 // 既定ワークスペースのフォルダ名（ホーム直下に作成）。
 export const DEFAULT_WORKSPACE_DIR = "lite-markdown-notes";

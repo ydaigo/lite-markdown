@@ -62,7 +62,11 @@ export async function openInNewWindow(path: string): Promise<void> {
 
     const label = windowLabel(path);
     const existing = await WebviewWindow.getByLabel(label);
-    if (existing) return existing.setFocus();
+    if (existing) {
+      // 「前面に出す」は表示してから前へ。非表示のまま残っていても取り戻せる。
+      await existing.show();
+      return existing.setFocus();
+    }
 
     // 開いたウィンドウ側の initWorkspace() が ?note= を見て該当メモを選ぶ。
     // 見た目はメインウィンドウに合わせ、描画後に自分で show() する（白いちらつき対策）。

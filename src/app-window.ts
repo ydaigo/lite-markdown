@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { FULLSCREEN_SYNC_DEBOUNCE_MS } from "./constants";
+import { FULLSCREEN_SYNC_DEBOUNCE_MS, REVEAL_PAINT_WAIT_MS } from "./constants";
 
 // 自作タイトルバーやウィンドウ操作で使う現在のウィンドウ参照。
 export const appWindow = getCurrentWindow();
@@ -44,27 +44,33 @@ export function applyPlatform(): void {
 // ============================================================================
 // 起動時の表示
 // ============================================================================
-// ウィンドウは非表示で作られる（tauri.conf.json の visible: false）。
-// 中身を描き終えてから出すことで、起動直後の白いちらつきを見せない。
-// 呼び忘れ・失敗に備えて Rust 側にも時間切れで表示する保険がある。
+// ウィンドウは非表示で作られる（メインは tauri.conf.json の visible: false、
+// メモ用の別ウィンドウは note-actions.ts）。中身を描き終えてから出すことで、
+// 起動直後の白いちらつきを見せない。
+// 呼び忘れ・失敗に備えて Rust 側にも時間切れで表示する保険がある（lib.rs）。
 let revealed = false;
 
-export function revealWindow(): void {
+// 実際に出す。旗は呼び出し時ではなくここで立てる。呼び出し時に立てると、
+// 描画待ちが空振りしたときに時間切れの呼び直しまで空振りしてしまう。
+async function reveal(): Promise<void> {
   if (revealed) return;
   revealed = true;
+  try {
+    await appWindow.show();
+    await appWindow.setFocus();
+  } catch (e) {
+    // 表示できなくても Rust 側の保険で出るため、画面には出さず記録だけ残す
+    // （権限不足で黙って落ちると、保険が効く数秒間ウィンドウが出ない）。
+    console.error("show() に失敗しました", e);
+  }
+}
+
+export function revealWindow(): void {
   // 1 回目の rAF は描画前に走るので、実際に描き終えた次のフレームで出す。
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      void (async () => {
-        try {
-          await appWindow.show();
-          await appWindow.setFocus();
-        } catch (e) {
-          // 表示できなくても Rust 側の保険で出るため、画面には出さず記録だけ残す
-          // （権限不足で黙って落ちると、保険が効く数秒間ウィンドウが出ない）。
-          console.error("show() に失敗しました", e);
-        }
-      })();
-    });
+    requestAnimationFrame(() => void reveal());
   });
+  // ただし非表示のうちは描画しない環境（macOS の WKWebView）があり、そこでは
+  // 上の rAF が永久に届かない。描き終わりを待つのは上限までにして、必ず出す。
+  setTimeout(() => void reveal(), REVEAL_PAINT_WAIT_MS);
 }
