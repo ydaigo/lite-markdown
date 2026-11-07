@@ -86,11 +86,17 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
 export async function initWorkspace(): Promise<void> {
   state.workspaces = readWorkspaces();
 
-  // 別ウィンドウで開かれた場合は URL でメモが指定される（note-actions.ts）。
+  // 別ウィンドウで開かれた場合は URL でメモかワークスペースが指定される（note-actions.ts）。
   // メモは必ずワークスペース直下にあるので、その親フォルダを開く。
-  const note = new URLSearchParams(location.search).get("note");
+  const params = new URLSearchParams(location.search);
+  const note = params.get("note");
   if (note) {
     await setWorkspace(dirName(note), note);
+    return;
+  }
+  const ws = params.get("workspace");
+  if (ws) {
+    await setWorkspace(ws);
     return;
   }
 

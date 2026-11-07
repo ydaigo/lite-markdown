@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "メインウィンドウとメモ用サブウィンドウ（note-*）の標準権限",
-  "windows": ["main", "note-*"],
+  "description": "メインウィンドウと別ウィンドウ（メモ用 note-* / ワークスペース用 ws-*）の標準権限",
+  "windows": ["main", "note-*", "ws-*"],
   "permissions": [
     "core:default",
     "core:path:default",

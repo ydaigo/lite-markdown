@@ -1,7 +1,7 @@
 import { state } from "./store";
 import { wsMenuEl, el } from "./dom";
 import { openMenuUnder, type MenuItem } from "./context-menu";
-import { openFolder, openTerminal } from "./note-actions";
+import { openFolder, openTerminal, openWorkspaceInNewWindow } from "./note-actions";
 import { setWorkspace, chooseWorkspaceFolder, removeWorkspaceFromHistory } from "./workspace";
 import { baseName } from "./utils";
 import { t } from "./i18n";
@@ -13,6 +13,13 @@ import { t } from "./i18n";
 // 履歴 1 件分に対する操作。開いているワークスペースは履歴から外せない。
 function wsMenuItems(ws: string): MenuItem[] {
   const items: MenuItem[] = [
+    {
+      label: t("menuOpenInNewWindow"),
+      action: () => {
+        toggleWsMenu(false);
+        void openWorkspaceInNewWindow(ws);
+      },
+    },
     { label: t("menuOpenFolder"), action: () => void openFolder(ws) },
     { label: t("menuOpenTerminal"), action: () => void openTerminal(ws) },
   ];

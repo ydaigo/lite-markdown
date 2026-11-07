@@ -15,7 +15,7 @@ pub fn run() {
             commands::open_dir,
             commands::open_terminal
         ])
-        // メインもメモ用の別ウィンドウ（note-*）も同じ作りなので、ページを読み込んだ
+        // メインも別ウィンドウ（note-* / ws-*）も同じ作りなので、ページを読み込んだ
         // ウィンドウすべてに掛ける。読み込みの完了ではなく開始で掛けるのは、フロントが
         // 途中で止まったときにも効かせるため。
         .on_page_load(|webview, payload| {

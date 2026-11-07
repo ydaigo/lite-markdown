@@ -33,12 +33,12 @@ export async function openTerminal(dir: string): Promise<void> {
 // 別ウィンドウで開く
 // ============================================================================
 // ウィンドウのラベルに使える文字は限られる（英数と - _ / :）ため、パスそのものでは
-// なくハッシュから作る。同じメモなら必ず同じラベルになるので、二重に開かずに済む。
-// 接頭辞 "note-" は capabilities/default.json の windows 指定と対応する。
-function windowLabel(path: string): string {
+// なくハッシュから作る。同じ対象なら必ず同じラベルになるので、二重に開かずに済む。
+// 接頭辞（"note-" / "ws-"）は capabilities/default.json の windows 指定と対応する。
+function windowLabel(prefix: "note" | "ws", path: string): string {
   let h = 5381;
   for (let i = 0; i < path.length; i++) h = ((h * 33) ^ path.charCodeAt(i)) >>> 0;
-  return `note-${h.toString(36)}`;
+  return `${prefix}-${h.toString(36)}`;
 }
 
 // ウィンドウ装飾の指定。macOS はネイティブのウィンドウボタン（信号機）を出し、
@@ -54,30 +54,42 @@ const decorationOptions = () =>
       }
     : { decorations: false };
 
+// 別ウィンドウを開く。同じラベルのウィンドウが既にあれば、それを前面に出す。
+// 開いたウィンドウ側の initWorkspace() が URL の query を見て開く対象を決める。
+async function openWindow(label: string, query: string): Promise<void> {
+  const existing = await WebviewWindow.getByLabel(label);
+  if (existing) {
+    // 「前面に出す」は表示してから前へ。非表示のまま残っていても取り戻せる。
+    await existing.show();
+    return existing.setFocus();
+  }
+
+  // 見た目はメインウィンドウに合わせ、描画後に自分で show() する（白いちらつき対策）。
+  const win = new WebviewWindow(label, {
+    url: `index.html?${query}`,
+    title: t("appName"),
+    ...NOTE_WINDOW,
+    ...decorationOptions(),
+    visible: false,
+  });
+  // 生成はここから非同期に進むので、失敗はイベントで受け取る。
+  void win.once<string>("tauri://error", (e) => showErrorFor(t("newWindowFailed"), e.payload));
+}
+
 // メモを別ウィンドウで開く。既に開いていれば、そのウィンドウを前面に出す。
 export async function openInNewWindow(path: string): Promise<void> {
   await withErrorNotice(t("newWindowFailed"), async () => {
     // このウィンドウで編集中のメモなら、開く前に書き出して内容を揃える。
     if (path === state.currentPath) await flushSave();
+    await openWindow(windowLabel("note", path), `note=${encodeURIComponent(path)}`);
+  });
+}
 
-    const label = windowLabel(path);
-    const existing = await WebviewWindow.getByLabel(label);
-    if (existing) {
-      // 「前面に出す」は表示してから前へ。非表示のまま残っていても取り戻せる。
-      await existing.show();
-      return existing.setFocus();
-    }
-
-    // 開いたウィンドウ側の initWorkspace() が ?note= を見て該当メモを選ぶ。
-    // 見た目はメインウィンドウに合わせ、描画後に自分で show() する（白いちらつき対策）。
-    const win = new WebviewWindow(label, {
-      url: `index.html?note=${encodeURIComponent(path)}`,
-      title: t("appName"),
-      ...NOTE_WINDOW,
-      ...decorationOptions(),
-      visible: false,
-    });
-    // 生成はここから非同期に進むので、失敗はイベントで受け取る。
-    void win.once<string>("tauri://error", (e) => showErrorFor(t("newWindowFailed"), e.payload));
+// ワークスペースを別ウィンドウで開く。既に開いていれば、そのウィンドウを前面に出す。
+export async function openWorkspaceInNewWindow(ws: string): Promise<void> {
+  await withErrorNotice(t("newWindowFailed"), async () => {
+    // 同じフォルダを開くので、編集中の内容は先に書き出しておく。
+    await flushSave();
+    await openWindow(windowLabel("ws", ws), `workspace=${encodeURIComponent(ws)}`);
   });
 }
