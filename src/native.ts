@@ -1,10 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 
 // ============================================================================
-// Rust 側のコマンド（src-tauri/src/commands.rs）
+// Rust 側のコマンド（src-tauri/src/commands.rs / open_files.rs）
 // ============================================================================
-// プラグインでは足りない 2 つだけを自前のコマンドにしている。どちらも「ホームの外の
-// フォルダを扱う」ためのもの。コマンド名と引数の形を知っているのはこのモジュールだけ。
+// プラグインでは足りない分だけを自前のコマンドにしている。コマンド名と引数の形を
+// 知っているのはこのモジュールだけ。
 
 // 一度許可したフォルダ。実行時スコープは足すだけで消えないので、二度目からは
 // 呼ばずに済ませる（ワークスペース切替や画像の貼り付けのたびに呼べるようにする）。
@@ -32,3 +32,7 @@ export const openDir = (dir: string): Promise<void> => invoke("open_dir", { path
 // ターミナルの起動はプラグインに無いので、こちらも Rust 側でやる。
 export const openTerminalAt = (dir: string): Promise<void> =>
   invoke("open_terminal", { path: dir });
+
+// OS の「このアプリで開く」で起動時に渡された .md ファイルを受け取る（src-tauri/src/open_files.rs）。
+// 呼んだ後に届いたものは "open-files" イベントで来る（open-files.ts）。メインウィンドウが 1 回だけ呼ぶ。
+export const takeLaunchFiles = (): Promise<string[]> => invoke("take_launch_files");

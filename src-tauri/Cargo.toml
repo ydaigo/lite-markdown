@@ -28,6 +28,9 @@ serde_json = "1"
 # （ローカルビルドを軽くするため、既定では含めない。リリースの CI ビルドで有効化）。
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = { version = "2", optional = true }
+# 起動中に「このアプリで開く」をされると OS は 2 つ目のプロセスを起動する（Windows）。
+# それを止め、渡されたファイルを起動中のプロセスへ回す（src/open_files.rs）。
+tauri-plugin-single-instance = "2"
 
 [features]
 updater = ["dep:tauri-plugin-updater"]

@@ -48,6 +48,17 @@
       "nsis": {
         "installMode": "currentUser"
       }
-    }
+    },
+    "fileAssociations": [
+      {
+        "ext": ["md"],
+        "name": "Markdown",
+        "description": "Markdown Document",
+        "role": "Editor",
+        "rank": "Alternate",
+        "mimeType": "text/markdown",
+        "contentTypes": ["net.daringfireball.markdown"]
+      }
+    ]
   }
 }

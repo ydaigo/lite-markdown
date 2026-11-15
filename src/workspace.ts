@@ -7,7 +7,10 @@ import { showEmptyState } from "./view-modes";
 import { watchWorkspace } from "./sync";
 import { updateWsName } from "./sidebar";
 import { mkdirSafe } from "./fs-utils";
-import { allowDir } from "./native";
+import { allowDir, takeLaunchFiles } from "./native";
+import { listenOpenFiles } from "./open-files";
+import { openInNewWindow } from "./note-actions";
+import { isMainWindow } from "./app-window";
 import { showErrorFor } from "./errors";
 import { dirName } from "./utils";
 import {
@@ -85,6 +88,9 @@ export async function setWorkspace(path: string, preferNote?: string): Promise<v
 // 起動時の復元: 前回のワークスペース、無ければホーム直下の既定フォルダを開く。
 export async function initWorkspace(): Promise<void> {
   state.workspaces = readWorkspaces();
+  // 起動中に「このアプリで開く」で渡されたファイルを受け取る（open-files.ts）。
+  // 下の takeLaunchFiles より先に張る。後だと、その間に届いた分を取りこぼす。
+  await listenOpenFiles();
 
   // 別ウィンドウで開かれた場合は URL でメモかワークスペースが指定される（note-actions.ts）。
   // メモは必ずワークスペース直下にあるので、その親フォルダを開く。
@@ -98,6 +104,17 @@ export async function initWorkspace(): Promise<void> {
   if (ws) {
     await setWorkspace(ws);
     return;
+  }
+
+  // OS の「このアプリで開く」で起動された場合は、そのファイルのフォルダを開いて
+  // ファイルを選ぶ。複数渡されたら 2 件目以降は別ウィンドウで開く。
+  if (isMainWindow()) {
+    const [first, ...rest] = await takeLaunchFiles().catch(() => []);
+    if (first) {
+      await setWorkspace(dirName(first), first);
+      for (const path of rest) void openInNewWindow(path);
+      return;
+    }
   }
 
   const current = readCurrentWorkspace();
